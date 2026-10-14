@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IdealX SMSF Start</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column of form steps on a matte-black ground, indigo as the only accent, a board-notes drawer docking on the right at desktop width. */
+:root{
+  --bg:#0c0c10; --surface:#15151b; --surface-2:#1d1d26; --fg:#f1f0ec; --muted:#9b9ba9;
+  --line:#2a2a35; --line-strong:#3b3b49;
+  --accent:#6366f1; --accent-strong:#8183f7; --accent-soft:rgba(99,102,241,.16); --on-accent:#ffffff;
+  --good:#3ccf91; --good-soft:rgba(60,207,145,.14); --warn:#e8b54d; --warn-soft:rgba(232,181,77,.14); --bad:#ef6b6b; --bad-soft:rgba(239,107,107,.14);
+  --display:'Fraunces',Georgia,'Times New Roman',serif;
+  --body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --radius:8px; --shadow:0 20px 60px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f3f3f6; --surface:#ffffff; --surface-2:#ebebf1; --fg:#131318; --muted:#5d5d6c;
+    --line:#dadae3; --line-strong:#c2c2cd;
+    --accent:#4b4ed8; --accent-strong:#3a3dc4; --accent-soft:rgba(75,78,216,.10); --on-accent:#ffffff;
+    --good:#1f9f68; --good-soft:rgba(31,159,104,.12); --warn:#b7831a; --warn-soft:rgba(183,131,26,.12); --bad:#cf4444; --bad-soft:rgba(207,68,68,.10);
+    --shadow:0 20px 60px rgba(20,20,40,.18);
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f3f3f6; --surface:#ffffff; --surface-2:#ebebf1; --fg:#131318; --muted:#5d5d6c;
+  --line:#dadae3; --line-strong:#c2c2cd;
+  --accent:#4b4ed8; --accent-strong:#3a3dc4; --accent-soft:rgba(75,78,216,.10); --on-accent:#ffffff;
+  --good:#1f9f68; --good-soft:rgba(31,159,104,.12); --warn:#b7831a; --warn-soft:rgba(183,131,26,.12); --bad:#cf4444; --bad-soft:rgba(207,68,68,.10);
+  --shadow:0 20px 60px rgba(20,20,40,.18);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(2rem,5.5vw,3.4rem);font-variation-settings:'opsz' 96}
+h2{font-size:clamp(1.55rem,3.5vw,2.1rem);font-variation-settings:'opsz' 72}
+h3{font-size:1.2rem;font-variation-settings:'opsz' 36}
+p{margin:0}
+a{color:var(--accent-strong)}
+button{font:inherit;color:inherit;cursor:pointer}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* Header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wordmark{font-weight:600;letter-spacing:.18em;font-size:.9rem;text-decoration:none;color:var(--fg)}
+.wordmark span{color:var(--muted);letter-spacing:0;font-weight:400;margin-left:10px;font-size:.85rem}
+.top .spacer{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);font-weight:500;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.choice:focus-within,.slot:focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{background:var(--accent-strong)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--fg);border-color:var(--line)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:.875rem}
+.btn.full{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* Progress */
+.progress{height:3px;background:var(--line);position:relative}
+.progress i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);transition:width .35s ease}
+.stepline{max-width:720px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:8px;padding-block:14px 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-size:.8rem;color:var(--muted)}
+.stepline b{color:var(--fg);font-weight:500}
+
+/* Page body */
+main{padding-block:28px 96px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.col{max-width:720px;margin:0 auto;display:grid;gap:28px}
+.col.wide{max-width:1000px}
+.stack{display:grid;gap:16px}
+.stack.tight{gap:10px}
+.lede{font-size:1.1rem;color:var(--muted);max-width:60ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.card.quiet{background:transparent}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.row > *{min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--line)}
+.actions .right{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+
+/* Landing */
+.hero{display:grid;gap:22px;padding-block:24px 8px}
+.hero .ctas{display:flex;gap:12px;flex-wrap:wrap}
+.points{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.point{border-top:1px solid var(--line-strong);padding-top:14px;display:grid;gap:6px}
+.point b{font-weight:600}
+.resume{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:16px 18px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.compare{width:100%;border-collapse:collapse;font-size:.9rem}
+.compare th,.compare td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.compare th{color:var(--muted);font-weight:500;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+.tablewrap{overflow-x:auto}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;padding-block:20px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+footer .in{max-width:1100px;margin:0 auto;display:grid;gap:8px}
+
+/* Form fields */
+.f{display:grid;gap:6px}
+.f label,.f .lbl{font-size:.875rem;font-weight:500}
+.f .hint{font-size:.8rem;color:var(--muted)}
+.f .err{display:none;font-size:.8rem;color:var(--bad)}
+.f.has-err .err{display:block}
+.f.has-err input,.f.has-err select,.f.has-err textarea,.f.has-err .choices{border-color:var(--bad)}
+input,select,textarea{width:100%;min-height:46px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);font:inherit}
+textarea{min-height:90px;resize:vertical}
+input::placeholder{color:var(--muted)}
+select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;border:1px solid transparent;border-radius:12px}
+.choices.inline{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.choice{position:relative;display:grid;gap:4px;padding:14px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface);cursor:pointer}
+.choice input{position:absolute;opacity:0;width:1px;height:1px;min-height:0}
+.choice b{font-weight:600}
+.choice span{font-size:.85rem;color:var(--muted)}
+.choice:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.choice:has(input:checked) b::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle}
+.check{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface);cursor:pointer}
+.check input{width:20px;height:20px;min-height:0;margin:2px 0 0;flex:none;accent-color:var(--accent)}
+.check.has-err{border-color:var(--bad)}
+.check .err{display:none}
+.check.has-err .err{display:block;font-size:.8rem;color:var(--bad)}
+.consent{background:var(--surface-2)}
+.section-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.member{border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px;background:var(--surface)}
+.member .mh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;letter-spacing:.04em;padding:4px 10px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);text-transform:uppercase}
+.pill.accent{color:var(--accent-strong);border-color:var(--accent)}
+.pill.good{color:var(--good);border-color:var(--good)}
+.pill.warn{color:var(--warn);border-color:var(--warn)}
+.pill.bad{color:var(--bad);border-color:var(--bad)}
+.note{border-left:3px solid var(--accent);padding:10px 14px;background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:.9rem}
+.note.warn{border-color:var(--warn);background:var(--warn-soft)}
+details{border:1px solid var(--line);border-radius:12px;padding:0 16px}
+details summary{cursor:pointer;padding:14px 0;font-weight:500;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details summary::after{content:'+';color:var(--muted);font-size:1.2rem}
+details[open] summary::after{content:'–'}
+details > :not(summary){margin-bottom:14px}
+
+/* Review */
+.rv{display:grid;gap:10px}
+.rv .rh{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.kv{display:grid;grid-template-columns:minmax(120px,38%) 1fr;gap:4px 14px;font-size:.92rem}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.done-ref{font-family:var(--mono);font-size:1.4rem;letter-spacing:.08em}
+ol.next{margin:0;padding-left:20px;display:grid;gap:8px}
+
+/* Sheet (save & get help) */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:640px){.scrim{align-items:center}}
+.sheet{background:var(--surface);border:1px solid var(--line-strong);border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:grid;gap:18px;box-shadow:var(--shadow)}
+@media (min-width:640px){.sheet{border-radius:16px;padding-left:24px;padding-right:24px}}
+.sheet .sh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.opt{display:grid;gap:4px;text-align:left;padding:16px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface-2);width:100%}
+.opt:hover{border-color:var(--accent)}
+.opt b{font-weight:600}
+.opt span{font-size:.875rem;color:var(--muted)}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.day{flex:none;display:grid;gap:2px;justify-items:center;min-width:64px;padding:10px 8px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);font-size:.8rem}
+.day b{font-size:1.1rem;font-weight:600}
+.day.on{border-color:var(--accent);background:var(--accent-soft)}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.slot{min-height:40px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);font-family:var(--mono);font-size:.85rem}
+.slot.on{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
+.slot[disabled]{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+
+/* Nudge toast */
+.nudge{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:35;margin:0 auto;max-width:520px;background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow)}
+.nudge p{flex:1;min-width:0;font-size:.9rem}
+
+/* Board notes drawer */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--surface);border-left:1px solid var(--line-strong);z-index:50;display:grid;grid-template-rows:auto auto 1fr;box-shadow:var(--shadow);padding-top:env(safe-area-inset-top,0px);padding-right:env(safe-area-inset-right,0px)}
+.drawer .dh{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.tabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{flex:1;min-width:0;background:none;border:0;border-bottom:2px solid transparent;padding:10px 8px;font-size:.85rem;color:var(--muted);white-space:nowrap}
+.tabs button.on{color:var(--fg);border-bottom-color:var(--accent)}
+.drawer .db{overflow:auto;padding:16px;display:grid;gap:14px;align-content:start;font-size:.9rem}
+.ev{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:grid;gap:4px}
+.ev .evh{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:.8rem}
+.ev .evh b{font-family:var(--mono);font-weight:500;color:var(--accent-strong)}
+.ev pre{margin:0;font-family:var(--mono);font-size:.72rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--muted);max-height:220px;overflow:auto}
+pre.json{margin:0;font-family:var(--mono);font-size:.74rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px}
+.seq{width:100%;border-collapse:collapse;font-size:.82rem}
+.seq th,.seq td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.seq th{color:var(--muted);font-weight:500;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
+.seq td:first-child{font-family:var(--mono);white-space:nowrap;color:var(--accent-strong)}
+.journey{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:6px}
+.journey b{font-weight:600}
+.journey .steps{font-size:.8rem;color:var(--muted)}
+.status-line{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.85rem}
+body.drawer-open main,body.drawer-open .top-in,body.drawer-open footer .in{max-width:calc(100% - 440px)}
+@media (max-width:900px){body.drawer-open main,body.drawer-open .top-in,body.drawer-open footer .in{max-width:none}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="wordmark" href="#" id="home">IDEALX <span>SMSF Start</span></a>
+    <div class="spacer"></div>
+    <button class="btn sm" id="helpBtn" hidden>Save &amp; get help</button>
+    <button class="btn sm ghost" id="notesBtn" aria-controls="drawer">Board notes</button>
+  </div>
+  <div class="progress" id="progress" hidden><i style="width:0"></i></div>
+</header>
+<div class="stepline" id="stepline" hidden></div>
+<main id="app" aria-live="polite"></main>
+<footer><div class="in">
+  <div>Idealx Platform Pty Ltd (ABN 83 694 912 126) is a Corporate Authorised Representative of Idealx Securities Limited (AFSL 531729). This page collects details to set up a self-managed super fund. It is general information only and does not take your personal circumstances into account.</div>
+  <div>Prototype for board review. Nothing entered here is sent anywhere unless a webhook is configured in Board notes.</div>
+</div></footer>
+<div id="overlay"></div>
+<div id="nudge"></div>
+<aside id="drawer" class="drawer" hidden></aside>
+<script>
+(function(){
+'use strict';
+/* ---------- constants ---------- */
+const STORE_KEY = 'idealx.smsf.start.v1';
+const FORM_STEPS = ['fund','trustee','members','banking','review'];
+const STEP_TITLES = {fund:'Your fund',trustee:'Trustee',members:'Members',banking:'Banking & contact',review:'Review'};
+const STATES = ['VIC','NSW','QLD','WA','SA','TAS','ACT','NT'];
+const BAL = [['lt100','Under $100k'],['100_250','$100k – $250k'],['250_500','$250k – $500k'],['500_1m','$500k – $1m'],['gt1m','Over $1m'],['unsure','Not sure yet']];
+const NURTURE = [
+  ['T+10 min','SMS','"Your SMSF application is saved. Pick up where you left off: [link]"','Resume link, single tap'],
+  ['T+1 hour','Email','What you have done, what is left, resume link, option to book a call','Resume or book'],
+  ['T+1 business day','Call 1','Sales task created in CRM with the saved record attached; caller completes the form with them on the phone','Finish over the phone'],
+  ['T+3 days','Email','Short explainer: individual vs corporate trustee, what the fund can invest in','Resume'],
+  ['T+7 days','Call 2','Second attempt; voicemail script offers a booking link','Book'],
+  ['T+14 days','Email','Last-chance note from a named specialist with a booking link','Book'],
+  ['T+30 days','Stop','Moves to monthly newsletter unless they opted out of marketing','']
+];
+
+/* ---------- state ---------- */
+const fresh = () => ({
+  lead:{id:null,first:'',last:'',email:'',mobile:'',consent_contact:false,consent_marketing:false,intent:'self',source:{},created_at:null},
+  fund:{name:'',structure:'',member_count:'2',rollover:'',balance:'',timeline:''},
+  trustee:{second:{first:'',last:'',dob:'',email:'',mobile:'',relationship:''},company_mode:'',company_name:'',acn:'',office_same:'yes',office:{street:'',suburb:'',state:'',postcode:''},directors_confirmed:false},
+  members:[],
+  banking:{cash_account:'idealx',primary_contact:'0',adviser:'no',adviser_name:'',adviser_firm:'',contact_method:'phone',contact_time:'morning'},
+  review:{decl_trustee:false,decl_accurate:false,decl_advice:false},
+  booking:null,
+  progress:{step:'landing',completed:[],status:'new',application_id:null,last_active:null},
+  ui:{errors:{},helpView:null,notesTab:'flow',webhook:''}
+});
+let state = fresh();
+let events = [];
+let drawerOpen = false;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const get = p => p.split('.').reduce((o,k)=>o==null?undefined:o[k], state);
+function set(p,v){const ks=p.split('.');let o=state;for(let i=0;i<ks.length-1;i++){if(o[ks[i]]==null)o[ks[i]]=/^\d+$/.test(ks[i+1])?[]:{};o=o[ks[i]];}o[ks[ks.length-1]]=v;}
+const uid = (pfx) => pfx + '_' + Math.random().toString(36).slice(2,10);
+const idFor = p => 'f-' + p.replace(/[^a-z0-9]+/gi,'-');
+const fullName = o => [o.first,o.last].filter(Boolean).join(' ');
+const nowIso = () => new Date().toISOString();
+
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify({state,events})); }catch(e){} }
+function load(){ try{ const raw=localStorage.getItem(STORE_KEY); if(!raw) return; const d=JSON.parse(raw); if(d&&d.state){ state=Object.assign(fresh(),d.state); state.ui=Object.assign(fresh().ui,{webhook:(d.state.ui||{}).webhook||''}); events=d.events||[]; } }catch(e){} }
+function captureSource(){ try{ const q=new URLSearchParams(location.search); const src={}; ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','gclid','fbclid','ttclid'].forEach(k=>{ if(q.get(k)) src[k]=q.get(k); }); if(document.referrer) src.referrer=document.referrer; src.landing_url=location.href.split('?')[0]; if(!state.lead.source||!Object.keys(state.lead.source).length) state.lead.source=src; }catch(e){} }
+
+/* ---------- events / webhook ---------- */
+function emit(type, data){
+  const ev={event:type,event_id:uid('evt'),occurred_at:nowIso(),lead_id:state.lead.id,application_id:state.progress.application_id,step:state.progress.step,status:state.progress.status,data:data||{}};
+  events.unshift(ev); if(events.length>200) events.length=200;
+  save();
+  const url=(state.ui.webhook||'').trim();
+  if(url){ try{ fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(ev)}).catch(()=>{}); }catch(e){} }
+  if(drawerOpen) renderDrawer();
+}
+function completedSections(){
+  const done=[]; if(state.lead.consent_contact) done.push('contact');
+  FORM_STEPS.forEach(s=>{ if(state.progress.completed.includes(s)) done.push(s); });
+  return done;
+}
+function snapshot(){ return {sections_completed:completedSections(),fund:{name:state.fund.name,structure:state.fund.structure,member_count:Number(state.fund.member_count)||null},members_entered:state.members.filter(m=>m.first||m.last).length}; }
+
+/* ---------- field builders ---------- */
+function errOf(p){ return state.ui.errors[p]; }
+function field(p,label,o={}){
+  const id=idFor(p), v=get(p), e=errOf(p);
+  const type=o.type||'text';
+  return `<div class="f ${e?'has-err':''}" data-f="${p}"><label for="${id}">${label}${o.opt?' <span class="muted">(optional)</span>':''}</label>
+  <input id="${id}" data-bind="${p}" type="${type}" value="${esc(v)}" ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.ac?`autocomplete="${o.ac}"`:''} ${o.im?`inputmode="${o.im}"`:''} ${o.max?`maxlength="${o.max}"`:''} ${o.rerender?'data-rerender="1"':''}>
+  ${o.hint?`<div class="hint">${o.hint}</div>`:''}<div class="err">${esc(e||'')}</div></div>`;
+}
+function select(p,label,opts,o={}){
+  const id=idFor(p), v=get(p), e=errOf(p);
+  return `<div class="f ${e?'has-err':''}" data-f="${p}"><label for="${id}">${label}${o.opt?' <span class="muted">(optional)</span>':''}</label>
+  <select id="${id}" data-bind="${p}" ${o.rerender?'data-rerender="1"':''}><option value="">Select…</option>${opts.map(([k,t])=>`<option value="${esc(k)}" ${String(v)===String(k)?'selected':''}>${esc(t)}</option>`).join('')}</select>
+  ${o.hint?`<div class="hint">${o.hint}</div>`:''}<div class="err">${esc(e||'')}</div></div>`;
+}
+function choices(p,label,opts,o={}){
+  const v=get(p), e=errOf(p), name=idFor(p);
+  return `<div class="f ${e?'has-err':''}" data-f="${p}"><div class="lbl">${label}</div>
+  <div class="choices ${o.inline?'inline':''}" role="radiogroup" aria-label="${esc(label)}">${opts.map(([k,t,d],i)=>`<label class="choice"><input type="radio" name="${name}" id="${name}-${i}" value="${esc(k)}" data-bind="${p}" ${o.rerender?'data-rerender="1"':''} ${String(v)===String(k)?'checked':''}><b>${t}</b>${d?`<span>${d}</span>`:''}</label>`).join('')}</div>
+  ${o.hint?`<div class="hint">${o.hint}</div>`:''}<div class="err">${esc(e||'')}</div></div>`;
+}
+function check(p,label,o={}){
+  const id=idFor(p), v=!!get(p), e=errOf(p);
+  return `<label class="check ${o.cls||''} ${e?'has-err':''}" data-f="${p}"><input type="checkbox" id="${id}" data-bind="${p}" ${v?'checked':''}><div><div>${label}</div><div class="err">${esc(e||'')}</div></div></label>`;
+}
+function address(prefix){
+  return `<div class="grid2">${field(prefix+'.street','Street address',{ac:'street-address'})}${field(prefix+'.suburb','Suburb',{ac:'address-level2'})}</div>
+  <div class="grid2">${select(prefix+'.state','State',STATES.map(s=>[s,s]))}${field(prefix+'.postcode','Postcode',{im:'numeric',max:4,ac:'postal-code'})}</div>`;
+}
+
+/* ---------- validation ---------- */
+const isEmail = s => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s||'');
+const isMobile = s => /^(\+?61|0)4\d{8}$/.test((s||'').replace(/[\s-]/g,''));
+function isAdult(d){ if(!d) return false; const b=new Date(d); if(isNaN(b)) return false; const t=new Date(); const age=t.getFullYear()-b.getFullYear()-((t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))?1:0); return age>=18&&age<110; }
+function personErrors(pfx,o,E,opts={}){
+  if(!o.first) E[pfx+'.first']='Enter a first name.';
+  if(!o.last) E[pfx+'.last']='Enter a last name.';
+  if(!isAdult(o.dob)) E[pfx+'.dob']='Enter a date of birth. Trustees and members must be 18 or over.';
+  if(!isEmail(o.email)) E[pfx+'.email']='Enter a valid email address.';
+  if(!isMobile(o.mobile)) E[pfx+'.mobile']='Enter an Australian mobile number, e.g. 0412 345 678.';
+  if(opts.address){ const a=o.addr||{}; if(!a.street) E[pfx+'.addr.street']='Enter a street address.'; if(!a.suburb) E[pfx+'.addr.suburb']='Enter a suburb.'; if(!a.state) E[pfx+'.addr.state']='Choose a state.'; if(!/^\d{4}$/.test(a.postcode||'')) E[pfx+'.addr.postcode']='Enter a 4-digit postcode.'; }
+}
+const validators = {
+  consent(){ const E={}, l=state.lead; if(!l.first) E['lead.first']='Enter your first name.'; if(!l.last) E['lead.last']='Enter your last name.'; if(!isEmail(l.email)) E['lead.email']='Enter a valid email address.'; if(!isMobile(l.mobile)) E['lead.mobile']='Enter an Australian mobile number, e.g. 0412 345 678.'; if(!l.consent_contact) E['lead.consent_contact']='We need this consent to save your progress and follow up.'; return E; },
+  fund(){ const E={}, f=state.fund; if(!f.name||f.name.length<4) E['fund.name']='Give the fund a name. You can change it before the deed is prepared.'; if(!f.structure) E['fund.structure']='Choose a trustee structure.'; if(!f.member_count) E['fund.member_count']='Choose how many members.'; if(!f.rollover) E['fund.rollover']='Let us know about existing super.'; if(!f.balance) E['fund.balance']='Pick a range.'; if(!f.timeline) E['fund.timeline']='Pick a timeframe.'; return E; },
+  trustee(){ const E={}, t=state.trustee; if(state.fund.structure==='individual'){ personErrors('trustee.second',t.second,E); if(Number(state.fund.member_count)===1&&!t.second.relationship) E['trustee.second.relationship']='Tell us how you know them.'; }
+    else { if(!t.company_mode) E['trustee.company_mode']='Choose one.'; if(!t.company_name||t.company_name.length<3) E['trustee.company_name']='Enter the company name.'; if(t.company_mode==='existing'&&!/^\d{9}$/.test((t.acn||'').replace(/\s/g,''))) E['trustee.acn']='Enter the 9-digit ACN.'; if(t.company_mode==='new'&&t.office_same==='no'){ const a=t.office; if(!a.street) E['trustee.office.street']='Enter a street address.'; if(!a.suburb) E['trustee.office.suburb']='Enter a suburb.'; if(!a.state) E['trustee.office.state']='Choose a state.'; if(!/^\d{4}$/.test(a.postcode||'')) E['trustee.office.postcode']='Enter a 4-digit postcode.'; } if(!t.directors_confirmed) E['trustee.directors_confirmed']='Please confirm.'; }
+    return E; },
+  members(){ const E={}; state.members.forEach((m,i)=>{ personErrors('members.'+i,m,E,{address:true}); if(!m.resident) E['members.'+i+'.resident']='Choose one.'; if(!m.employer_contrib) E['members.'+i+'.employer_contrib']='Choose one.'; }); return E; },
+  banking(){ const E={}, b=state.banking; if(!b.cash_account) E['banking.cash_account']='Choose one.'; if(b.adviser==='yes'&&!b.adviser_name) E['banking.adviser_name']='Enter their name.'; return E; },
+  review(){ const E={}, r=state.review; if(!r.decl_trustee) E['review.decl_trustee']='Required.'; if(!r.decl_accurate) E['review.decl_accurate']='Required.'; if(!r.decl_advice) E['review.decl_advice']='Required.'; return E; }
+};
+
+/* ---------- members sync ---------- */
+function blankMember(){ return {first:'',last:'',dob:'',email:'',mobile:'',addr:{street:'',suburb:'',state:'',postcode:''},resident:'',employer_contrib:'',rollover_funds:'',rollover_balance:''}; }
+function syncMembers(){
+  const n=Math.max(1,Math.min(6,Number(state.fund.member_count)||1));
+  while(state.members.length<n) state.members.push(blankMember());
+  if(state.members.length>n) state.members.length=n;
+  const m0=state.members[0], l=state.lead;
+  if(!m0.first&&!m0.last){ m0.first=l.first; m0.last=l.last; m0.email=l.email; m0.mobile=l.mobile; }
+  if(state.fund.structure==='individual'&&n>=2){ const m1=state.members[1], s=state.trustee.second; if(!m1.first&&!m1.last){ Object.assign(m1,{first:s.first,last:s.last,dob:s.dob,email:s.email,mobile:s.mobile}); } }
+}
+
+/* ---------- navigation ---------- */
+function go(step){
+  state.progress.step=step; state.ui.errors={}; state.progress.last_active=nowIso();
+  if(FORM_STEPS.includes(step)&&state.progress.status!=='submitted') state.progress.status='in_progress';
+  save(); render(); window.scrollTo({top:0,behavior:'instant'});
+}
+function completeStep(step,next){
+  const E=validators[step]?validators[step]():{};
+  if(Object.keys(E).length){ state.ui.errors=E; render(); const first=document.querySelector('.has-err'); if(first) first.scrollIntoView({block:'center'}); return; }
+  if(!state.progress.completed.includes(step)) state.progress.completed.push(step);
+  if(step==='consent'){ if(!state.lead.id){ state.lead.id=uid('lead'); state.lead.created_at=nowIso(); state.progress.application_id=uid('app'); emit('lead.created',{first:state.lead.first,last:state.lead.last,email:state.lead.email,mobile:state.lead.mobile,consent_contact:true,consent_marketing:state.lead.consent_marketing,intent:state.lead.intent,source:state.lead.source}); } else { emit('lead.updated',{email:state.lead.email,mobile:state.lead.mobile,consent_marketing:state.lead.consent_marketing}); }
+    if(state.lead.intent==='assisted'){ state.progress.status='in_progress'; save(); go('fund'); openHelp('book'); return; } }
+  else { emit('step.completed',{section:step,snapshot:snapshot(),section_data:sectionData(step)}); }
+  if(step==='trustee'||step==='fund') syncMembers();
+  go(next);
+}
+function sectionData(step){ const copy=JSON.parse(JSON.stringify(state[step]||{})); return copy; }
+
+/* ---------- screens ---------- */
+function landing(){
+  const resumable=state.lead.id&&!['submitted'].includes(state.progress.status)&&state.progress.completed.length>0;
+  return `<div class="col wide">
+  ${resumable?`<div class="resume"><div><b>Welcome back, ${esc(state.lead.first)}.</b> <span class="muted">You've completed ${completedSections().length} of 6 sections. We saved everything.</span></div><div class="row"><button class="btn sm ghost" data-act="restart">Start over</button><button class="btn sm primary" data-act="resume">Continue where I left off</button></div></div>`:''}
+  <section class="hero">
+    <div class="eyebrow">Self-managed super, set up properly</div>
+    <h1>Start your SMSF in about fifteen minutes. Hand it to a person at any point.</h1>
+    <p class="lede">Tell us who's in the fund and how you want it run. Do it all yourself, or stop wherever you like and a specialist picks it up with you on the phone. Nothing you enter is lost.</p>
+    <div class="ctas"><button class="btn primary" data-act="start">Start setting up my fund</button><button class="btn" data-act="talk">Talk to someone first</button></div>
+    <div class="small muted">No tax file numbers or ID documents on this page. Those happen inside your secure IdealX account.</div>
+  </section>
+  <div class="points">
+    <div class="point"><b>Individual or corporate trustee</b><span class="muted small">Two or more people as trustees, or a company you already have or we register for you.</span></div>
+    <div class="point"><b>Save and finish later</b><span class="muted small">Every step is saved as you go. Come back from the link we email you.</span></div>
+    <div class="point"><b>A person picks up where you stop</b><span class="muted small">Book a time, or ask for a callback, and we finish the rest together.</span></div>
+  </div>
+  <div class="card stack">
+    <h3>What you'll need</h3>
+    <div class="grid3 small">
+      <div><b>About the fund</b><div class="muted">A name, trustee structure, how many members, and roughly how much super is coming in.</div></div>
+      <div><b>About each person</b><div class="muted">Name, date of birth, address and contact details for every member and trustee.</div></div>
+      <div><b>About the company</b><div class="muted">If you choose a corporate trustee: a company name, or the ACN of one you already have.</div></div>
+    </div>
+  </div>
+  <details><summary>Individual trustees or a corporate trustee?</summary>
+    <div class="tablewrap"><table class="compare"><thead><tr><th></th><th>Individual trustees</th><th>Corporate trustee</th></tr></thead><tbody>
+    <tr><td>Who acts as trustee</td><td>Two to six people. Every member is a trustee. A single-member fund needs a second person who is not a member.</td><td>One company. Every member is a director. A single-member fund can have a sole director.</td></tr>
+    <tr><td>Set-up cost</td><td>Lower. No company to register.</td><td>Higher. The company is registered with ASIC and pays a small annual fee.</td></tr>
+    <tr><td>When members change</td><td>Assets are held in the trustees' names, so titles change when trustees change.</td><td>Assets stay in the company's name. Only the directors change.</td></tr>
+    <tr><td>Liability</td><td>Trustees are personally liable.</td><td>The company is liable; directors are protected in most cases.</td></tr>
+    <tr><td>Common choice</td><td>Couples who want the simplest start.</td><td>Most funds that hold property, or plan to run for decades.</td></tr>
+    </tbody></table></div>
+    <p class="small muted">General information only. If you're unsure, pick either and ask about it on a call; the structure can be settled before the deed is prepared.</p>
+  </details>
+  </div>`;
+}
+function consent(){
+  const assisted=state.lead.intent==='assisted';
+  return `<div class="col">
+  <div class="stack"><div class="eyebrow">Before we begin</div><h2>${assisted?'Where should we call you?':'Where can we reach you?'}</h2>
+  <p class="lede">${assisted?'Leave your details and pick a time. We hold your place while you choose.':'We save your progress against these details so you can finish any time, on any device.'}</p></div>
+  <div class="grid2">${field('lead.first','First name',{ac:'given-name'})}${field('lead.last','Last name',{ac:'family-name'})}</div>
+  <div class="grid2">${field('lead.email','Email',{type:'email',ac:'email',im:'email'})}${field('lead.mobile','Mobile',{type:'tel',ac:'tel',im:'tel',ph:'04xx xxx xxx'})}</div>
+  <div class="stack tight">
+    ${check('lead.consent_contact','<b>Save my progress and follow up if I stop.</b> I understand that if I don\'t finish, IdealX keeps what I\'ve entered and may contact me by phone, SMS or email to help me complete it. I can ask them to stop at any time.',{cls:'consent'})}
+    ${check('lead.consent_marketing','Also send me occasional IdealX news and SMSF guides. <span class="muted">(optional)</span>')}
+    <div class="small muted">We handle your details under the <a href="https://www.idealx.com/legal" target="_blank" rel="noopener">IdealX Privacy Policy</a>. We never sell your data.</div>
+  </div>
+  <div class="actions"><button class="btn ghost" data-act="go" data-to="landing">Back</button><div class="right"><button class="btn primary" data-act="complete" data-step="consent" data-next="fund">${assisted?'Save and pick a time':'Continue'}</button></div></div>
+  </div>`;
+}
+function fundStep(){
+  const n=Number(state.fund.member_count);
+  const tip=state.fund.structure==='individual'&&n===1?`<div class="note">A single-member fund with individual trustees needs a second trustee who isn't a member. That's often a partner or adult child. We'll ask about them next.</div>`:state.fund.structure==='corporate'?`<div class="note">With a corporate trustee, every member becomes a director of the trustee company. ${n===1?'A single-member fund can have you as sole director.':''}</div>`:'';
+  return `<div class="col">
+  <div class="stack"><div class="eyebrow">Section 1 of 5</div><h2>Your fund</h2><p class="lede">The basics we need before anything can be drafted.</p></div>
+  ${field('fund.name','Fund name',{ph:'The '+(state.lead.last||'Smith')+' Superannuation Fund',hint:'Most people use their family name. It can be changed before the deed is prepared.'})}
+  ${choices('fund.structure','Trustee structure',[['individual','Individual trustees','Two to six people. Every member is a trustee. Lower set-up cost.'],['corporate','Corporate trustee','A company acts as trustee. Easier when members change or the fund holds property.']],{rerender:true,hint:'Not sure? Choose one; it can be changed on a call before the deed is drafted.'})}
+  ${choices('fund.member_count','How many members?',[['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6']],{inline:true,rerender:true,hint:'Members are the people whose super goes into the fund. Up to six.'})}
+  ${tip}
+  ${choices('fund.rollover','Is there existing super to bring in?',[['yes','Yes, roll over existing super'],['no','No, starting fresh'],['unsure','Not sure yet']],{})}
+  <div class="grid2">${select('fund.balance','Expected starting balance',BAL)}${select('fund.timeline','When do you want it running?',[['asap','As soon as possible'],['1_3m','In the next 1 to 3 months'],['exploring','Just exploring for now']])}</div>
+  ${navRow('consent','fund','trustee')}
+  </div>`;
+}
+function trusteeStep(){
+  const n=Number(state.fund.member_count), t=state.trustee, indiv=state.fund.structure==='individual';
+  let body='';
+  if(indiv){
+    body=`<div class="stack"><div class="eyebrow">Section 2 of 5</div><h2>Your second trustee</h2><p class="lede">You're trustee one. ${n>=2?'Every member is also a trustee, so tell us about the second member here and the rest in the next step.':'Because the fund has one member, the second trustee is someone who is not a member. They can\'t be your employer unless they are also a relative.'}</p></div>
+    <div class="grid2">${field('trustee.second.first','First name',{ac:'off'})}${field('trustee.second.last','Last name',{ac:'off'})}</div>
+    <div class="grid2">${field('trustee.second.dob','Date of birth',{type:'date'})}${select('trustee.second.relationship','Relationship to you',[['spouse','Spouse or partner'],['family','Family member'],['business','Business partner'],['friend','Friend'],['other','Other']],{opt:n>=2})}</div>
+    <div class="grid2">${field('trustee.second.email','Email',{type:'email',im:'email'})}${field('trustee.second.mobile','Mobile',{type:'tel',im:'tel',ph:'04xx xxx xxx'})}</div>
+    <div class="note">We'll email them to confirm they agree to act as trustee. They complete their own identity check later, inside the secure account.</div>`;
+  } else {
+    body=`<div class="stack"><div class="eyebrow">Section 2 of 5</div><h2>The trustee company</h2><p class="lede">A special-purpose company whose only job is to act as trustee of this fund.</p></div>
+    ${choices('trustee.company_mode','Do you have a company to use?',[['new','Register a new company','We set up a special-purpose trustee company for you.'],['existing','Use an existing company','It must act only as trustee of this fund.']],{rerender:true})}
+    ${t.company_mode?`<div class="grid2">${field('trustee.company_name',t.company_mode==='new'?'Proposed company name':'Company name',{ph:t.company_mode==='new'?(state.lead.last||'Smith')+' Super Pty Ltd':'',hint:t.company_mode==='new'?'We check availability with ASIC before registering.':''})}${t.company_mode==='existing'?field('trustee.acn','ACN',{im:'numeric',max:11,ph:'123 456 789'}):''}</div>`:''}
+    ${t.company_mode==='new'?choices('trustee.office_same','Registered office',[['yes','Use my home address','We take this from your member details.'],['no','A different address','Enter it below.']],{rerender:true}):''}
+    ${t.company_mode==='new'&&t.office_same==='no'?address('trustee.office'):''}
+    ${t.company_mode?check('trustee.directors_confirmed',`<b>All ${n===1?'members (that\'s you)':n+' members'} will be ${n===1?'the sole director or a director':'directors'} of the trustee company.</b> I understand a corporate trustee company must act only as trustee of this fund.`):''}`;
+  }
+  return `<div class="col">${body}${navRow('fund','trustee','members')}</div>`;
+}
+function membersStep(){
+  syncMembers();
+  const n=state.members.length;
+  const cards=state.members.map((m,i)=>{const p='members.'+i; return `<div class="member">
+    <div class="mh"><h3>Member ${i+1}${i===0?' <span class="muted small">(you)</span>':''}</h3>${i===n-1&&n>1?`<button class="btn sm ghost" data-act="remove-member">Remove</button>`:''}</div>
+    <div class="grid2">${field(p+'.first','First name')}${field(p+'.last','Last name')}</div>
+    <div class="grid2">${field(p+'.dob','Date of birth',{type:'date'})}${choices(p+'.resident','Australian resident for tax?',[['yes','Yes'],['no','No']],{inline:true})}</div>
+    <div class="grid2">${field(p+'.email','Email',{type:'email',im:'email'})}${field(p+'.mobile','Mobile',{type:'tel',im:'tel',ph:'04xx xxx xxx'})}</div>
+    ${address(p+'.addr')}
+    ${choices(p+'.employer_contrib','Will an employer pay super into the fund?',[['yes','Yes'],['no','No'],['unsure','Not sure']],{inline:true})}
+    ${state.fund.rollover!=='no'?`<div class="grid2">${field(p+'.rollover_funds','Existing super fund(s) to roll in',{opt:true,ph:'e.g. AustralianSuper, Hostplus'})}${select(p+'.rollover_balance','Approximate balance',BAL,{opt:true})}</div>`:''}
+  </div>`;}).join('');
+  return `<div class="col">
+  <div class="stack"><div class="eyebrow">Section 3 of 5</div><h2>Members</h2><p class="lede">One card per person whose super goes into the fund. ${state.fund.structure==='corporate'?'Each member becomes a director of the trustee company.':'Each member is also a trustee.'}</p></div>
+  <div class="note">We'll collect tax file numbers and verify each person's identity inside their secure IdealX account, not on this page.</div>
+  ${cards}
+  ${n<6?`<button class="btn" data-act="add-member">Add another member</button>`:''}
+  ${navRow('trustee','members','banking')}
+  </div>`;
+}
+function bankingStep(){
+  const b=state.banking;
+  const people=state.members.map((m,i)=>[String(i),fullName(m)||('Member '+(i+1))]);
+  return `<div class="col">
+  <div class="stack"><div class="eyebrow">Section 4 of 5</div><h2>Banking and contact</h2><p class="lede">Where the fund's cash sits, and who we talk to.</p></div>
+  ${choices('banking.cash_account','Fund cash account',[['idealx','IdealX cash account','Opened with the fund. Contributions and rollovers land here and show live in your IdealX view.'],['own','I\'ll open my own','We give you the fund details to open an account at your bank.']])}
+  ${select('banking.primary_contact','Primary contact for the fund',people)}
+  ${choices('banking.adviser','Is an adviser or accountant helping you?',[['no','No'],['yes','Yes']],{inline:true,rerender:true,hint:'If yes, we loop them in through the IdealX Console with the access you choose.'})}
+  ${b.adviser==='yes'?`<div class="grid2">${field('banking.adviser_name','Their name')}${field('banking.adviser_firm','Firm',{opt:true})}</div>`:''}
+  <div class="grid2">${select('banking.contact_method','Best way to reach you',[['phone','Phone'],['sms','SMS'],['email','Email']])}${select('banking.contact_time','Best time',[['morning','Morning (9 to 12)'],['midday','Midday (12 to 2)'],['afternoon','Afternoon (2 to 5)']])}</div>
+  ${navRow('members','banking','review')}
+  </div>`;
+}
+function reviewStep(){
+  const f=state.fund,t=state.trustee,b=state.banking;
+  const kv=rows=>`<dl class="kv">${rows.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v||'—')}</dd>`).join('')}</dl>`;
+  const structure=f.structure==='individual'?'Individual trustees':'Corporate trustee';
+  const trusteeRows=f.structure==='individual'?[['Trustee 1',fullName(state.lead)],['Trustee 2',fullName(t.second)],['Relationship',t.second.relationship]]:[['Company',t.company_name+(t.company_mode==='existing'?' (ACN '+t.acn+')':' (new registration)')],['Registered office',t.company_mode==='new'?(t.office_same==='yes'?'Member 1 home address':[t.office.street,t.office.suburb,t.office.state,t.office.postcode].filter(Boolean).join(', ')):'As registered'],['Directors',state.members.map(fullName).filter(Boolean).join(', ')]];
+  const memberBlocks=state.members.map((m,i)=>`<div class="rv"><div class="rh"><b>Member ${i+1}</b><button class="btn sm ghost" data-act="go" data-to="members">Edit</button></div>${kv([['Name',fullName(m)],['Date of birth',m.dob],['Address',[m.addr.street,m.addr.suburb,m.addr.state,m.addr.postcode].filter(Boolean).join(', ')],['Contact',m.email+' · '+m.mobile],['Tax resident',m.resident],['Employer super',m.employer_contrib],['Rolling in',m.rollover_funds?m.rollover_funds+(m.rollover_balance?' ('+(BAL.find(x=>x[0]===m.rollover_balance)||[])[1]+')':''):'None listed']])}</div>`).join('');
+  return `<div class="col">
+  <div class="stack"><div class="eyebrow">Section 5 of 5</div><h2>Check and submit</h2><p class="lede">Have a look over everything. You can edit any section.</p></div>
+  <div class="rv"><div class="rh"><b>Fund</b><button class="btn sm ghost" data-act="go" data-to="fund">Edit</button></div>${kv([['Name',f.name],['Structure',structure],['Members',f.member_count],['Existing super',f.rollover],['Starting balance',(BAL.find(x=>x[0]===f.balance)||[])[1]],['Timeframe',f.timeline]])}</div>
+  <div class="rv"><div class="rh"><b>Trustee</b><button class="btn sm ghost" data-act="go" data-to="trustee">Edit</button></div>${kv(trusteeRows)}</div>
+  ${memberBlocks}
+  <div class="rv"><div class="rh"><b>Banking and contact</b><button class="btn sm ghost" data-act="go" data-to="banking">Edit</button></div>${kv([['Cash account',b.cash_account==='idealx'?'IdealX cash account':'Own bank'],['Primary contact',fullName(state.members[Number(b.primary_contact)]||{})],['Adviser',b.adviser==='yes'?b.adviser_name+(b.adviser_firm?', '+b.adviser_firm:''):'No'],['Reach you by',b.contact_method+', '+b.contact_time]])}</div>
+  <div class="stack tight">
+    ${check('review.decl_trustee','I understand that trustees are responsible for running the fund in line with superannuation law, and that IdealX provides records, reporting and a platform, not personal advice.')}
+    ${check('review.decl_accurate','The details above are true and complete to the best of my knowledge. Each person named has agreed to be included.')}
+    ${check('review.decl_advice','I understand the next steps involve identity verification and tax file numbers inside a secure IdealX account, and that no fund exists until the deed is signed and the ATO registers it.')}
+  </div>
+  <div class="actions"><button class="btn ghost" data-act="go" data-to="banking">Back</button><div class="right"><button class="btn ghost" data-act="help">Save &amp; get help</button><button class="btn primary" data-act="submit">Submit application</button></div></div>
+  </div>`;
+}
+function doneScreen(){
+  const b=state.booking;
+  return `<div class="col">
+  <div class="stack"><div class="pill good">Submitted</div><h2>Thanks, ${esc(state.lead.first)}. Your fund application is in.</h2><p class="lede">Reference <span class="done-ref">${esc(state.progress.application_id||'').replace('app_','IX-').toUpperCase()}</span>. We've emailed a copy to ${esc(state.lead.email)}.</p></div>
+  <div class="card stack"><h3>What happens next</h3><ol class="next">
+    <li><b>Within one business day</b> a specialist checks the details and calls if anything needs clearing up.</li>
+    <li><b>Secure account invite.</b> Each member and trustee gets a link to verify their identity and provide their tax file number.</li>
+    <li><b>Documents.</b> ${state.fund.structure==='corporate'&&state.trustee.company_mode==='new'?'We register the trustee company, then prepare the trust deed.':'We prepare the trust deed.'} Everyone signs electronically.</li>
+    <li><b>Registration.</b> We apply to the ATO for the fund's ABN and TFN, and ${state.banking.cash_account==='idealx'?'open the IdealX cash account':'send you what you need to open the bank account'}.</li>
+    <li><b>Rollovers and contributions.</b> ${state.fund.rollover==='no'?'Once registered, contributions can begin.':'Once registered, we initiate the rollovers you listed.'}</li>
+  </ol></div>
+  ${b?`<div class="note">Your call with a specialist is booked for <b>${esc(b.label)}</b> Melbourne time.</div>`:`<div class="row"><button class="btn" data-act="help-book">Book a time to walk through the next steps</button><span class="small muted">Optional. Useful if you'd like the documents explained.</span></div>`}
+  <div class="actions"><button class="btn ghost" data-act="restart">Start another application</button></div>
+  </div>`;
+}
+function handoffScreen(){
+  const b=state.booking, st=state.progress.status, done=completedSections().length;
+  const head=st==='booked'?`Booked. We'll call you ${esc(b.label)}.`:st==='callback'?'Got it. A specialist will call you shortly.':'Saved. Your link is on its way.';
+  const sub=st==='booked'?`A calendar invite and SMS reminder are on their way to ${esc(state.lead.email)} and ${esc(state.lead.mobile)}. The specialist will have everything you've entered in front of them.`:st==='callback'?`We call during business hours, usually within the hour, from a Melbourne number. The specialist will have everything you've entered in front of them.`:`We emailed ${esc(state.lead.email)} a link that opens this application exactly where you left it. It works on any device.`;
+  return `<div class="col">
+  <div class="stack"><div class="pill accent">${st==='booked'?'Call booked':st==='callback'?'Callback requested':'Progress saved'}</div><h2>${head}</h2><p class="lede">${sub}</p></div>
+  <div class="card stack"><div class="section-h"><h3>What we have so far</h3><span class="muted small">${done} of 6 sections</span></div>
+  <div class="status-line">${['contact','fund','trustee','members','banking','review'].map(s=>`<span class="pill ${completedSections().includes(s)?'good':''}">${s}</span>`).join('')}</div>
+  <p class="small muted">Anything you add before the call is saved too.</p></div>
+  <div class="actions"><button class="btn ghost" data-act="go" data-to="landing">Back to start</button><div class="right"><button class="btn primary" data-act="resume">Keep going anyway</button></div></div>
+  </div>`;
+}
+function navRow(prev,step,next){
+  return `<div class="actions"><button class="btn ghost" data-act="go" data-to="${prev}">Back</button><div class="right"><button class="btn ghost" data-act="help">Prefer to talk it through?</button><button class="btn primary" data-act="complete" data-step="${step}" data-next="${next}">Continue</button></div></div>`;
+}
+
+/* ---------- help sheet (tap-out) ---------- */
+let helpDay=null;
+function openHelp(view){ state.ui.helpView=view||'menu'; if(view==='book'||!view) helpDay=null; renderOverlay(); }
+function closeHelp(){ state.ui.helpView=null; renderOverlay(); }
+function businessDays(n){ const out=[]; const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+1); while(out.length<n){ const wd=d.getDay(); if(wd!==0&&wd!==6) out.push(new Date(d)); d.setDate(d.getDate()+1);} return out; }
+const fmtDay=d=>new Intl.DateTimeFormat('en-AU',{weekday:'short'}).format(d);
+const fmtDate=d=>new Intl.DateTimeFormat('en-AU',{weekday:'long',day:'numeric',month:'long'}).format(d);
+const dkey=d=>d.toISOString().slice(0,10);
+function slotsFor(d){ const out=[]; for(let h=9;h<17;h++) for(const m of [0,30]){ const t=`${String(h).padStart(2,'0')}:${m?'30':'00'}`; const seed=(d.getDate()*31+h*7+m)%11; out.push({t,taken:seed===3||seed===8}); } return out; }
+function renderOverlay(){
+  const ov=$('#overlay'); const v=state.ui.helpView; if(!v){ ov.innerHTML=''; return; }
+  let body='';
+  if(v==='menu'){
+    body=`<div class="sh"><div><div class="eyebrow">Hand it over at any point</div><h3 style="margin-top:6px">How would you like to finish?</h3><p class="small muted">Everything you've entered is saved under ${esc(state.lead.email)}. Whoever helps you sees it.</p></div><button class="btn sm ghost" data-act="help-close" aria-label="Close">✕</button></div>
+    <button class="opt" data-act="help-view" data-view="book"><b>Book a call with a specialist</b><span>Pick a 30-minute slot. We finish the application together on the phone.</span></button>
+    <button class="opt" data-act="help-view" data-view="callback"><b>Call me when someone's free</b><span>Business hours, usually within the hour.</span></button>
+    <button class="opt" data-act="help-view" data-view="link"><b>Email me a link to finish later</b><span>Opens this application where you left it, on any device.</span></button>`;
+  } else if(v==='book'){
+    const days=businessDays(10); if(!helpDay) helpDay=dkey(days[0]); const cur=days.find(d=>dkey(d)===helpDay)||days[0];
+    const sel=state.booking&&state.booking.date===helpDay?state.booking.time:null;
+    body=`<div class="sh"><div><div class="eyebrow">Book a call</div><h3 style="margin-top:6px">Choose a time</h3><p class="small muted">30 minutes, Melbourne time. A specialist calls ${esc(state.lead.mobile||'your mobile')}.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
+    <div class="days">${days.map(d=>`<button class="day ${dkey(d)===helpDay?'on':''}" data-act="pick-day" data-day="${dkey(d)}"><span>${fmtDay(d)}</span><b>${d.getDate()}</b><span>${new Intl.DateTimeFormat('en-AU',{month:'short'}).format(d)}</span></button>`).join('')}</div>
+    <div class="small"><b>${fmtDate(cur)}</b></div>
+    <div class="slots">${slotsFor(cur).map(s=>`<button class="slot ${sel===s.t?'on':''}" data-act="pick-slot" data-time="${s.t}" ${s.taken?'disabled':''}>${s.t}</button>`).join('')}</div>
+    <button class="btn primary full" data-act="confirm-book" ${sel?'':'disabled'}>${sel?'Confirm '+fmtDay(cur)+' '+cur.getDate()+' at '+sel:'Pick a slot to continue'}</button>`;
+  } else if(v==='callback'){
+    body=`<div class="sh"><div><div class="eyebrow">Callback</div><h3 style="margin-top:6px">We'll call ${esc(state.lead.mobile)}</h3><p class="small muted">Between 9am and 5pm Melbourne time, usually within the hour. If we miss you, we try again and send an SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
+    ${select('banking.contact_time','Best time',[['now','As soon as possible'],['morning','Morning (9 to 12)'],['midday','Midday (12 to 2)'],['afternoon','Afternoon (2 to 5)']])}
+    <button class="btn primary full" data-act="confirm-callback">Request a callback</button>`;
+  } else if(v==='link'){
+    body=`<div class="sh"><div><div class="eyebrow">Finish later</div><h3 style="margin-top:6px">We'll email a link to ${esc(state.lead.email)}</h3><p class="small muted">It opens this application exactly where you left it. If you don't come back within a day, a specialist checks in by SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
+    <button class="btn primary full" data-act="confirm-link">Send the link</button>`;
+  }
+  ov.innerHTML=`<div class="scrim" data-act="help-close-scrim"><div class="sheet" role="dialog" aria-modal="true">${body}</div></div>`;
+}
+function finishHandoff(kind, data){
+  state.progress.status=kind; state.progress.last_active=nowIso(); save();
+  emit(kind==='booked'?'booking.created':kind==='callback'?'callback.requested':'progress.saved',Object.assign({snapshot:snapshot()},data||{}));
+  emit('partial.submitted',{snapshot:snapshot(),record:exportRecord(),handoff:kind});
+  closeHelp(); hideNudge(); go('handoff');
+}
+
+/* ---------- abandonment / nurture ---------- */
+let idleTimer=null;
+function armIdle(){ clearTimeout(idleTimer); if(!FORM_STEPS.includes(state.progress.step)||!state.lead.id) return; idleTimer=setTimeout(showNudge,45000); }
+function showNudge(){ if(state.ui.helpView||$('#nudge').innerHTML) return; $('#nudge').innerHTML=`<div class="nudge" role="status"><p><b>Stuck on something?</b> Save what you've done and a specialist takes it from here.</p><button class="btn sm primary" data-act="help">Save &amp; get help</button><button class="btn sm ghost" data-act="nudge-close" aria-label="Dismiss">✕</button></div>`; emit('nudge.shown',{trigger:'idle_45s',snapshot:snapshot()}); }
+function hideNudge(){ $('#nudge').innerHTML=''; }
+function markAbandoned(trigger){
+  if(!state.lead.id||state.progress.status!=='in_progress') return;
+  state.progress.status='abandoned'; save();
+  emit('session.abandoned',{trigger,last_step:state.progress.step,snapshot:snapshot(),nurture:'enrolled',next_touch:'sms_resume_link_in_10m'});
+}
+function markResumed(){ if(state.progress.status==='abandoned'){ state.progress.status='in_progress'; save(); emit('session.resumed',{step:state.progress.step,nurture:'paused'}); } }
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) markAbandoned('tab_hidden'); else markResumed(); });
+window.addEventListener('pagehide',()=>markAbandoned('page_closed'));
+
+/* ---------- export ---------- */
+function exportRecord(){ const r=JSON.parse(JSON.stringify(state)); delete r.ui; return r; }
+
+/* ---------- drawer (board notes) ---------- */
+function renderDrawer(){
+  const d=$('#drawer'); d.hidden=!drawerOpen; document.body.classList.toggle('drawer-open',drawerOpen); if(!drawerOpen) return;
+  const tab=state.ui.notesTab;
+  const tabs=[['flow','Flow'],['events','Events ('+events.length+')'],['data','Record'],['nurture','Nurture']];
+  let body='';
+  if(tab==='flow'){
+    body=`<div class="status-line"><span class="pill ${ {new:'',in_progress:'accent',saved:'warn',booked:'good',callback:'good',abandoned:'bad',submitted:'good'}[state.progress.status]||''}">${state.progress.status.replace('_',' ')}</span><span class="muted">step: <b class="mono">${state.progress.step}</b></span>${state.lead.id?`<span class="muted mono small">${state.lead.id}</span>`:''}</div>
+    <div class="journey"><b>1 · Self-serve</b><div class="steps">Landing → contact + consent → fund → trustee → members → banking → review → submitted. Hands off to secure onboarding for TFN and ID.</div></div>
+    <div class="journey"><b>2 · Assisted tap-out</b><div class="steps">Any step → "Save &amp; get help" → book a slot, callback, or resume link. Partial record is submitted to the CRM with what's done.</div></div>
+    <div class="journey"><b>3 · Abandon and re-engage</b><div class="steps">Consent on screen one. Leaving the tab, closing the page, or 45 s idle after consent fires an abandonment event and enrols the lead in the nurture sequence.</div></div>
+    <div class="stack tight"><div class="eyebrow">Demo controls</div>
+    <div class="row"><button class="btn sm" data-act="demo-fill">Fill with example data</button><button class="btn sm" data-act="demo-abandon">Simulate abandonment</button><button class="btn sm ghost" data-act="restart">Reset prototype</button></div>
+    <div class="row">${['landing','consent','fund','trustee','members','banking','review','done','handoff'].map(s=>`<button class="btn sm ghost" data-act="jump" data-to="${s}">${s}</button>`).join('')}</div></div>
+    <div class="small muted">Example data is marked as such in the record and is never a real person.</div>`;
+  } else if(tab==='events'){
+    body=`<div class="f"><label for="f-webhook">Webhook URL <span class="muted">(optional)</span></label><input id="f-webhook" data-bind="ui.webhook" value="${esc(state.ui.webhook)}" placeholder="https://example.com/hooks/smsf-start"><div class="hint">Every event below is POSTed here as JSON when set. Leave blank for the demo.</div></div>
+    <div class="row"><button class="btn sm" data-act="copy-events">Copy all as JSON</button><span class="small muted" id="copyMsg"></span></div>
+    ${events.length?events.map(e=>`<div class="ev"><div class="evh"><b>${esc(e.event)}</b><span class="muted mono">${new Date(e.occurred_at).toLocaleTimeString('en-AU')}</span></div><pre>${esc(JSON.stringify(e,null,1))}</pre></div>`).join(''):'<div class="muted">No events yet. Start the form to see what the CRM would receive.</div>'}`;
+  } else if(tab==='data'){
+    body=`<div class="small muted">The lead and application record as it would be stored. TFNs and identity documents are deliberately absent.</div><pre class="json">${esc(JSON.stringify(exportRecord(),null,2))}</pre>`;
+  } else {
+    body=`<div class="small muted">Sequence after <b>session.abandoned</b>. Stops on submit, booking, callback completion, opt-out, or three unanswered calls.</div>
+    <div class="tablewrap"><table class="seq"><thead><tr><th>When</th><th>Channel</th><th>Content</th><th>Goal</th></tr></thead><tbody>${NURTURE.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="small muted">After a <b>booking.created</b>: confirmation email + SMS at once, SMS reminder one hour before, and a sales task with the saved record. A no-show re-enters the sequence at T+1 business day.</div>
+    <div class="small muted">Segmentation on <b>lead.created</b>: intent (self vs assisted), balance range, timeframe and campaign source are stored for routing and reporting.</div>`;
+  }
+  d.innerHTML=`<div class="dh"><div><b>Board notes</b><div class="small muted">What the prototype does behind the screens</div></div><button class="btn sm ghost" data-act="notes-close" aria-label="Close">✕</button></div>
+  <div class="tabs">${tabs.map(([k,t])=>`<button class="${tab===k?'on':''}" data-act="notes-tab" data-tab="${k}">${t}</button>`).join('')}</div><div class="db">${body}</div>`;
+}
+
+/* ---------- demo helpers ---------- */
+function demoFill(){
+  const L=state.lead; Object.assign(L,{first:'Priya',last:'Natarajan',email:'priya.example@example.com',mobile:'0412 000 123',consent_contact:true,consent_marketing:true,intent:'self'});
+  L.source=Object.assign({},L.source,{utm_source:'meta',utm_medium:'paid_social',utm_campaign:'smsf_start_q4',example:true});
+  Object.assign(state.fund,{name:'The Natarajan Superannuation Fund',structure:'corporate',member_count:'2',rollover:'yes',balance:'250_500',timeline:'asap'});
+  Object.assign(state.trustee,{company_mode:'new',company_name:'Natarajan Super Pty Ltd',office_same:'yes',directors_confirmed:true});
+  state.members=[Object.assign(blankMember(),{first:'Priya',last:'Natarajan',dob:'1984-03-12',email:'priya.example@example.com',mobile:'0412 000 123',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'AustralianSuper',rollover_balance:'250_500'}),
+    Object.assign(blankMember(),{first:'Daniel',last:'Okafor',dob:'1982-09-30',email:'daniel.example@example.com',mobile:'0433 000 456',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'Hostplus',rollover_balance:'100_250'})];
+  Object.assign(state.banking,{cash_account:'idealx',primary_contact:'0',adviser:'no',contact_method:'phone',contact_time:'morning'});
+  if(!L.id){ L.id=uid('lead'); L.created_at=nowIso(); state.progress.application_id=uid('app'); emit('lead.created',{first:L.first,last:L.last,email:L.email,mobile:L.mobile,consent_contact:true,consent_marketing:true,intent:'self',source:L.source,example:true}); }
+  state.progress.completed=['consent','fund','trustee','members','banking']; state.progress.status='in_progress';
+  save(); go('review');
+}
+
+/* ---------- render ---------- */
+function render(){
+  const step=state.progress.step;
+  const views={landing,consent,fund:fundStep,trustee:trusteeStep,members:membersStep,banking:bankingStep,review:reviewStep,done:doneScreen,handoff:handoffScreen};
+  $('#app').innerHTML=(views[step]||landing)();
+  const inForm=FORM_STEPS.includes(step);
+  $('#helpBtn').hidden=!(inForm&&state.lead.id);
+  $('#progress').hidden=!inForm; $('#stepline').hidden=!inForm;
+  if(inForm){ const i=FORM_STEPS.indexOf(step); $('#progress i').style.width=((i+1)/FORM_STEPS.length*100)+'%'; $('#stepline').innerHTML=`<span>Section <b>${i+1}</b> of ${FORM_STEPS.length} · <b>${STEP_TITLES[step]}</b></span><span>Saved as you go</span>`; }
+  const dob=document.querySelectorAll('input[type=date]'); const max=new Date(); max.setFullYear(max.getFullYear()-18); dob.forEach(el=>el.max=max.toISOString().slice(0,10));
+  armIdle();
+}
+
+/* ---------- input handling ---------- */
+document.addEventListener('input',e=>{
+  const el=e.target; const p=el.dataset.bind; if(!p) return;
+  const v=el.type==='checkbox'?el.checked:el.value; set(p,v);
+  if(p.startsWith('lead.')&&state.members[0]){ const k=p.slice(5); if(['first','last','email','mobile'].includes(k)&&!state.progress.completed.includes('members')) state.members[0][k]=v; }
+  const wrap=el.closest('[data-f]'); if(wrap&&state.ui.errors[p]){ delete state.ui.errors[p]; wrap.classList.remove('has-err'); }
+  state.progress.last_active=nowIso(); save(); armIdle();
+  if(el.dataset.rerender){ if(p==='fund.member_count'||p==='fund.structure') syncMembers(); render(); }
+});
+document.addEventListener('change',e=>{ const el=e.target; if(el.dataset.bind&&(el.tagName==='SELECT'||el.type==='radio'||el.type==='checkbox')) el.dispatchEvent(new Event('input',{bubbles:true})); });
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]'); if(!t) return;
+  const a=t.dataset.act;
+  if(a==='help-close-scrim'&&e.target!==t) return;
+  switch(a){
+    case 'start': state.lead.intent='self'; go('consent'); break;
+    case 'talk': state.lead.intent='assisted'; go('consent'); break;
+    case 'resume': markResumed(); go(state.progress.completed.includes('consent')?nextIncomplete():'consent'); break;
+    case 'restart': { const wh=state.ui.webhook; state=fresh(); state.ui.webhook=wh; captureSource(); hideNudge(); save(); go('landing'); break; }
+    case 'go': go(t.dataset.to); break;
+    case 'complete': completeStep(t.dataset.step,t.dataset.next); break;
+    case 'add-member': state.fund.member_count=String(Math.min(6,state.members.length+1)); syncMembers(); save(); render(); break;
+    case 'remove-member': state.fund.member_count=String(Math.max(1,state.members.length-1)); syncMembers(); save(); render(); break;
+    case 'submit': { const E=validators.review(); if(Object.keys(E).length){ state.ui.errors=E; render(); return; } state.progress.completed.push('review'); state.progress.status='submitted'; save(); emit('application.submitted',{record:exportRecord()}); hideNudge(); go('done'); break; }
+    case 'help': hideNudge(); openHelp('menu'); break;
+    case 'help-book': openHelp('book'); break;
+    case 'help-close': case 'help-close-scrim': closeHelp(); break;
+    case 'help-view': openHelp(t.dataset.view); break;
+    case 'pick-day': helpDay=t.dataset.day; renderOverlay(); break;
+    case 'pick-slot': { const d=new Date(helpDay+'T00:00:00'); state.booking={date:helpDay,time:t.dataset.time,label:fmtDate(d)+' at '+t.dataset.time,type:'specialist_call_30m'}; renderOverlay(); break; }
+    case 'confirm-book': if(state.booking){ if(state.progress.status==='submitted'){ emit('booking.created',{booking:state.booking,post_submission:true}); closeHelp(); save(); render(); } else finishHandoff('booked',{booking:state.booking}); } break;
+    case 'confirm-callback': finishHandoff('callback',{preferred_time:state.banking.contact_time,mobile:state.lead.mobile}); break;
+    case 'confirm-link': finishHandoff('saved',{resume_link_sent_to:state.lead.email}); break;
+    case 'nudge-close': hideNudge(); break;
+    case 'notes-close': drawerOpen=false; renderDrawer(); break;
+    case 'notes-tab': state.ui.notesTab=t.dataset.tab; renderDrawer(); break;
+    case 'demo-fill': demoFill(); renderDrawer(); break;
+    case 'demo-abandon': if(!state.lead.id){ demoFill(); } state.progress.status='in_progress'; markAbandoned('demo_button'); state.ui.notesTab='events'; renderDrawer(); break;
+    case 'jump': { const to=t.dataset.to; if(!state.lead.id&&!['landing','consent'].includes(to)) demoFill(); if(to==='done'&&state.progress.status!=='submitted'){ state.progress.status='submitted'; } if(to==='handoff'&&!['booked','callback','saved'].includes(state.progress.status)) state.progress.status='saved'; go(to); renderDrawer(); break; }
+    case 'copy-events': { const txt=JSON.stringify(events,null,2); const msg=$('#copyMsg'); const ok=()=>{ if(msg) msg.textContent='Copied.'; }; try{ navigator.clipboard.writeText(txt).then(ok).catch(()=>{ if(msg) msg.textContent='Select the text below and copy it.'; }); }catch(err){ if(msg) msg.textContent='Select the text below and copy it.'; } break; }
+  }
+});
+function nextIncomplete(){ for(const s of FORM_STEPS) if(!state.progress.completed.includes(s)) return s; return 'review'; }
+$('#helpBtn').addEventListener('click',()=>{ hideNudge(); openHelp('menu'); });
+$('#notesBtn').addEventListener('click',()=>{ drawerOpen=!drawerOpen; renderDrawer(); });
+$('#home').addEventListener('click',e=>{ e.preventDefault(); go('landing'); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(state.ui.helpView) closeHelp(); else if(drawerOpen){ drawerOpen=false; renderDrawer(); } } });
+
+/* ---------- boot ---------- */
+function start(){
+  load(); captureSource();
+  if(state.progress.step!=='landing'&&state.progress.step!=='done'&&state.progress.step!=='handoff') state.progress.step='landing';
+  if(state.progress.status==='abandoned') emit('session.returned',{via:'direct',nurture:'paused'});
+  render();
+}
+if(window.claude&&window.claude.hot&&window.claude.hot.ready){ window.claude.hot.ready(start); } else { start(); }
+})();
+</script>
+</body>
+</html>
