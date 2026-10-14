@@ -231,6 +231,13 @@ ol.next{margin:0;padding-left:20px;display:grid;gap:8px}
 .req{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-strong);font-weight:600}
 .optnote{font-size:.9rem;color:var(--muted)}
 
+.slot small{display:block;font-size:.62rem;line-height:1;opacity:.75;margin-top:3px;font-family:var(--body)}
+.otp{font-family:var(--mono);font-size:1.6rem;letter-spacing:.35em;text-align:center;min-height:56px}
+.checklist{margin:0;padding-left:18px;display:grid;gap:8px;font-size:.86rem}
+.checklist li b{font-weight:600}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted)}
+.links-row{display:flex;gap:14px;flex-wrap:wrap;font-size:.9rem}
+.audit{font-size:.75rem;color:var(--muted)}
 /* Nudge toast */
 .nudge{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:35;margin:0 auto;max-width:520px;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius-lg);padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow)}
 .nudge p{flex:1;min-width:0;font-size:.9rem}
@@ -287,19 +294,22 @@ body.drawer-open main,body.drawer-open .top-in,body.drawer-open footer .in{max-w
 const STORE_KEY = 'idealx.smsf.start.v1';
 const FORM_STEPS = ['fund','trustee','members','banking','review'];
 const STEP_TITLES = {fund:'Your fund',trustee:'Trustee',members:'Members',banking:'Banking & contact',review:'Review'};
-const CONSENT_TEXT = 'By pressing Get started you agree that IdealX saves what you enter as you go, and that if you stop before finishing, a specialist may contact you by phone, SMS or email to help you complete it. You can ask us to stop at any time.';
-const CONSENT_VERSION = '2026-10-14.v2';
+const CONSENT_TEXT = 'By pressing Get started you agree that IdealX saves what you enter as you go, and that if you stop before finishing, a specialist may contact you by phone, SMS or email to help you complete it. We first send a code to your mobile to confirm it is yours. You can stop all follow-up at any time by replying STOP to any SMS or using the unsubscribe link in any email.';
+const CONSENT_VERSION = '2026-10-14.v3';
 const OPTNOTE='<p class="optnote">Everything on this page is optional. Skip anything you\'re unsure of and a consultant can complete it with you.</p>';
 const STATES = ['VIC','NSW','QLD','WA','SA','TAS','ACT','NT'];
 const BAL = [['lt100','Under $100k'],['100_250','$100k – $250k'],['250_500','$250k – $500k'],['500_1m','$500k – $1m'],['gt1m','Over $1m'],['unsure','Not sure yet']];
 const NURTURE = [
-  ['T+10 min','SMS','"Your SMSF application is saved. Pick up where you left off: [link]"','Resume link, single tap'],
-  ['T+1 hour','Email','What you have done, what is left, resume link, option to book a call','Resume or book'],
-  ['T+1 business day','Call 1','Sales task created in CRM with the saved record attached; caller completes the form with them on the phone','Finish over the phone'],
-  ['T+3 days','Email','Short explainer: individual vs corporate trustee, what the fund can invest in','Resume'],
-  ['T+7 days','Call 2','Second attempt; voicemail script offers a booking link','Book'],
-  ['T+14 days','Email','Last-chance note from a named specialist with a booking link','Book'],
-  ['T+30 days','Stop','Moves to monthly newsletter unless they opted out of marketing','']
+  ['Abandonment confirmed','Rule','No activity for 30 minutes after leaving the page, and no return. Returning before then cancels everything below.',''],
+  ['+0','SMS','"Your SMSF application is saved. Pick up where you left off: [link]" (link asks for a mobile code first)','Resume'],
+  ['+1 hour','Email','What you have done, what is left, resume link, option to book a call','Resume or book'],
+  ['+1 business day','Call 1','Sales task created with the application reference; consultant completes the form with them on the phone, then sends a confirm-and-declare link','Finish by phone'],
+  ['+3 days','Email','Short explainer: individual vs corporate trustee, what the fund can invest in','Resume'],
+  ['+7 days','Call 2','Second attempt; voicemail offers a booking link','Book'],
+  ['+14 days','Email','Last note from a named consultant with a booking link','Book'],
+  ['+30 days','Stop','Monthly newsletter only if the news opt-in was ticked; record deleted after 90 days if not converted',''],
+  ['Any time','STOP','Reply STOP to any SMS or use the unsubscribe link in any email: all channels halt and the sales task closes',''],
+  ['Calls','Rule','Numbers checked against the Do Not Call Register; calls only in permitted hours (weekdays 9am to 8pm, Saturday 9am to 5pm, never Sunday or public holidays); caller ID shown','']
 ];
 
 /* ---------- brand themes (board review) ---------- */
@@ -324,15 +334,15 @@ document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.closest&&e
 
 /* ---------- state ---------- */
 const fresh = () => ({
-  lead:{id:null,first:'',last:'',email:'',mobile:'',consent_contact:false,consent:null,consent_marketing:false,intent:'self',source:{},created_at:null},
+  lead:{id:null,first:'',last:'',email:'',mobile:'',mobile_verified:false,verified_at:null,consent_contact:false,consent:null,consent_marketing:false,intent:'self',source:{},created_at:null},
   fund:{name:'',structure:'',member_count:'2',rollover:'',balance:'',timeline:''},
-  trustee:{second:{first:'',middle:'',last:'',dob:'',email:'',mobile:'',relationship:'',addr:{street:'',suburb:'',state:'',postcode:''}},company_mode:'',company_name:'',acn:'',office_same:'yes',office:{street:'',suburb:'',state:'',postcode:''},shareholders:'members',shareholders_other:'',directors_confirmed:false},
+  trustee:{second:{first:'',middle:'',last:'',dob:'',email:'',mobile:'',relationship:'',disqualified:'',invite_sent:false,addr:{street:'',suburb:'',state:'',postcode:''}},company_mode:'',company_name:'',acn:'',office_same:'yes',office:{street:'',suburb:'',state:'',postcode:''},shareholders:'members',shareholders_other:'',directors_confirmed:false},
   members:[],
   banking:{cash_account:'idealx',primary_contact:'0',adviser:'no',adviser_name:'',adviser_firm:'',contact_method:'phone',contact_time:'morning'},
   review:{decl_trustee:false,decl_accurate:false,decl_advice:false},
   booking:null,
-  progress:{step:'landing',completed:[],status:'new',application_id:null,last_active:null},
-  ui:{errors:{},helpView:null,notesTab:'flow',webhook:''}
+  progress:{step:'landing',completed:[],status:'new',application_id:null,last_active:null,last_field:null,audit:[]},
+  ui:{errors:{},helpView:null,notesTab:'flow',webhook:'',verifyNext:null,confirmRemove:false,consultant:false}
 });
 let state = fresh();
 let events = [];
@@ -365,7 +375,10 @@ function completedSections(){
   FORM_STEPS.forEach(s=>{ if(state.progress.completed.includes(s)) done.push(s); });
   return done;
 }
-function snapshot(){ return {sections_completed:completedSections(),fund:{name:state.fund.name,structure:state.fund.structure,member_count:Number(state.fund.member_count)||null},members_entered:state.members.filter(m=>m.first||m.last).length}; }
+function snapshot(){ return {sections_completed:completedSections(),fund:{name:state.fund.name,structure:state.fund.structure,member_count:Number(state.fund.member_count)||null},members_entered:state.members.filter(m=>m.first||m.last).length,last_field:state.progress.last_field,qualification:qualification()}; }
+function qualification(){ const f=state.fund; if(!f.balance&&!f.timeline) return 'unknown'; if(f.balance==='lt100'||f.timeline==='exploring') return 'explore'; if(['250_500','500_1m','gt1m'].includes(f.balance)&&f.timeline==='asap') return 'priority'; return 'standard'; }
+function crmView(){ const l=state.lead; return {lead_id:l.id,first:l.first,last:l.last,email:l.email,mobile:l.mobile,mobile_verified:!!l.mobile_verified,consent:l.consent,consent_marketing:l.consent_marketing,intent:l.intent,source:l.source,status:state.progress.status,application_ref:state.progress.application_id,progress:snapshot(),booking:state.booking,qualification:qualification()}; }
+function conversion(name){ const src=state.lead.source||{}; return {event:name,gclid:src.gclid||null,fbclid:src.fbclid||null,ttclid:src.ttclid||null,send_to:['google_ads_offline_conversions','meta_conversions_api'],occurred_at:nowIso()}; }
 
 /* ---------- why we ask (compliance / operational reasons shown as tooltips) ---------- */
 const WHY={
@@ -378,7 +391,7 @@ const WHY={
   'fund.structure':'Superannuation law requires every SMSF to have either individual trustees or a corporate trustee. The choice decides the deed, who signs, and how assets are held.',
   'fund.member_count':'An SMSF can have up to six members. The number sets how many trustees or directors are needed and how many identity checks we run.',
   'fund.rollover':'Tells us whether to prepare rollover requests to your existing funds once the SMSF has its ABN.',
-  'fund.balance':'Helps a consultant talk through whether an SMSF is cost-effective for you and which cash account fits. General information only, not advice.',
+  'fund.balance':'Lets us show the fixed yearly costs of running a fund next to the balance, and pick the right cash account. General information only; nothing on this page is personal financial advice.',
   'fund.timeline':'Sets how we prioritise your file and when we lodge the ATO registration.',
   'trustee.second.middle':'The deed and the ATO identity check use full legal names. Include every middle name exactly as it appears on ID.',
   'trustee.second.addr.street':'A trustee who is not a member is not covered by the member cards, and the deed must state every trustee\'s residential address.',
@@ -408,7 +421,10 @@ const WHY={
   'members.*.addr.street':'Residential address is required for the identity check and for the fund\'s registration with the ATO.',
   'members.*.employer_contrib':'If an employer will contribute, we give you the details they need (fund ABN, electronic service address, bank account) once the fund is registered.',
   'members.*.rollover_funds':'Lets us prepare rollover requests to those funds once the SMSF has its ABN.',
-  'members.*.rollover_balance':'Helps size the fund\'s cash account and lets a consultant check an SMSF is cost-effective for you.',
+  'members.*.rollover_balance':'Helps size the fund\'s cash account and plan the rollover. General information only.',
+  'members.*.disqualified':'Superannuation law bars anyone who is an undischarged bankrupt, has a dishonesty conviction, or has been disqualified by the ATO or ASIC from acting as a trustee or director. The ATO checks this at registration, so we ask now rather than after the deed is drafted.',
+  'trustee.second.disqualified':'Superannuation law bars anyone who is an undischarged bankrupt, has a dishonesty conviction, or has been disqualified by the ATO or ASIC from acting as a trustee. The ATO checks this at registration.',
+  'lead.otp':'Confirms the mobile is yours before we save anything against it or send any messages. It also stops bots and mistyped numbers.',
   'banking.cash_account':'An SMSF must keep its money separate from members\' personal accounts, so it needs its own account before contributions can be received.',
   'banking.primary_contact':'The ATO and we need one nominated contact for the fund\'s correspondence.',
   'banking.adviser':'If an adviser or accountant is involved we set up their Console access with only the authority you grant.',
@@ -418,7 +434,9 @@ const WHY={
   'review.decl_accurate':'The deed and the ATO registration are prepared from these details. Errors delay the fund and can require a new deed.',
   'review.decl_advice':'Identity and tax file numbers are collected inside the secure account under our AUSTRAC obligations, not on a public page.'
 };
-function info(p){ const k=p.replace(/members\.\d+/,'members.*'); const t=WHY[k]; if(!t) return ''; return `<button type="button" class="info" data-act="tip" aria-label="Why we ask for this">i</button><span class="tip" role="tooltip">${esc(t)}</span>`; }
+function hasInfo(p){ return !!WHY[p.replace(/members\.\d+/,'members.*')]; }
+function info(p){ const k=p.replace(/members\.\d+/,'members.*'); const t=WHY[k]; if(!t) return ''; return `<button type="button" class="info" data-act="tip" aria-label="Why we ask for this" aria-expanded="false" aria-controls="${idFor(p)}-tip">i</button><span class="tip" role="tooltip" id="${idFor(p)}-tip">${esc(t)}</span>`; }
+const describedBy=p=>hasInfo(p)?`aria-describedby="${idFor(p)}-tip"`:'';
 
 /* ---------- field builders ---------- */
 function errOf(p){ return state.ui.errors[p]; }
@@ -426,24 +444,24 @@ function field(p,label,o={}){
   const id=idFor(p), v=get(p), e=errOf(p);
   const type=o.type||'text';
   return `<div class="f ${e?'has-err':''}" data-f="${p}"><div class="lr"><label for="${id}">${label}</label>${o.req?'<span class="req">Required</span>':''}${info(p)}</div>
-  <input id="${id}" data-bind="${p}" type="${type}" value="${esc(v)}" ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.ac?`autocomplete="${o.ac}"`:''} ${o.im?`inputmode="${o.im}"`:''} ${o.max?`maxlength="${o.max}"`:''} ${o.rerender?'data-rerender="1"':''}>
+  <input id="${id}" data-bind="${p}" type="${type}" value="${esc(v)}" ${describedBy(p)} ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.ac?`autocomplete="${o.ac}"`:''} ${o.im?`inputmode="${o.im}"`:''} ${o.max?`maxlength="${o.max}"`:''} ${o.rerender?'data-rerender="1"':''}>
   ${o.hint?`<div class="hint">${o.hint}</div>`:''}<div class="err">${esc(e||'')}</div></div>`;
 }
 function select(p,label,opts,o={}){
   const id=idFor(p), v=get(p), e=errOf(p);
   return `<div class="f ${e?'has-err':''}" data-f="${p}"><div class="lr"><label for="${id}">${label}</label>${info(p)}</div>
-  <select id="${id}" data-bind="${p}" ${o.rerender?'data-rerender="1"':''}><option value="">Select…</option>${opts.map(([k,t])=>`<option value="${esc(k)}" ${String(v)===String(k)?'selected':''}>${esc(t)}</option>`).join('')}</select>
+  <select id="${id}" data-bind="${p}" ${describedBy(p)} ${o.rerender?'data-rerender="1"':''}><option value="">Select…</option>${opts.map(([k,t])=>`<option value="${esc(k)}" ${String(v)===String(k)?'selected':''}>${esc(t)}</option>`).join('')}</select>
   ${o.hint?`<div class="hint">${o.hint}</div>`:''}<div class="err">${esc(e||'')}</div></div>`;
 }
 function choices(p,label,opts,o={}){
   const v=get(p), e=errOf(p), name=idFor(p);
   return `<div class="f ${e?'has-err':''}" data-f="${p}"><div class="lr"><div class="lbl">${label}</div>${info(p)}</div>
-  <div class="choices ${o.inline?'inline':''}" role="radiogroup" aria-label="${esc(label)}">${opts.map(([k,t,d],i)=>`<label class="choice"><input type="radio" name="${name}" id="${name}-${i}" value="${esc(k)}" data-bind="${p}" ${o.rerender?'data-rerender="1"':''} ${String(v)===String(k)?'checked':''}><b>${t}</b>${d?`<span>${d}</span>`:''}</label>`).join('')}</div>
+  <div class="choices ${o.inline?'inline':''}" role="radiogroup" aria-label="${esc(label)}" ${describedBy(p)}>${opts.map(([k,t,d],i)=>`<label class="choice"><input type="radio" name="${name}" id="${name}-${i}" value="${esc(k)}" data-bind="${p}" ${o.rerender?'data-rerender="1"':''} ${String(v)===String(k)?'checked':''}><b>${t}</b>${d?`<span>${d}</span>`:''}</label>`).join('')}</div>
   ${o.hint?`<div class="hint">${o.hint}</div>`:''}<div class="err">${esc(e||'')}</div></div>`;
 }
 function check(p,label,o={}){
   const id=idFor(p), v=!!get(p), e=errOf(p);
-  return `<label class="check ${o.cls||''} ${e?'has-err':''}" data-f="${p}"><input type="checkbox" id="${id}" data-bind="${p}" ${v?'checked':''}><div><div>${label} <span class="lr">${info(p)}</span></div><div class="err">${esc(e||'')}</div></div></label>`;
+  return `<label class="check ${o.cls||''} ${e?'has-err':''}" data-f="${p}"><input type="checkbox" id="${id}" data-bind="${p}" ${describedBy(p)} ${v?'checked':''}><div><div>${label} <span class="lr">${info(p)}</span></div><div class="err">${esc(e||'')}</div></div></label>`;
 }
 function address(prefix){
   return `<div class="grid2">${field(prefix+'.street','Street address',{ac:'street-address'})}${field(prefix+'.suburb','Suburb',{ac:'address-level2'})}</div>
@@ -473,7 +491,7 @@ const validators = {
 };
 
 /* ---------- members sync ---------- */
-function blankMember(){ return {first:'',middle:'',last:'',dob:'',email:'',mobile:'',addr:{street:'',suburb:'',state:'',postcode:''},resident:'',employer_contrib:'',rollover_funds:'',rollover_member_no:'',rollover_balance:'',director_id:'',birthplace:''}; }
+function blankMember(){ return {first:'',middle:'',last:'',dob:'',email:'',mobile:'',addr:{street:'',suburb:'',state:'',postcode:''},resident:'',employer_contrib:'',rollover_funds:'',rollover_member_no:'',rollover_balance:'',director_id:'',birthplace:'',disqualified:'',invite_sent:false}; }
 function syncMembers(){
   const n=Math.max(1,Math.min(6,Number(state.fund.member_count)||1));
   while(state.members.length<n) state.members.push(blankMember());
@@ -494,6 +512,7 @@ function completeStep(step,next){
   if(Object.keys(E).length){ state.ui.errors=E; render(); const first=document.querySelector('.has-err'); if(first) first.scrollIntoView({block:'center'}); return; }
   if(!state.progress.completed.includes(step)) state.progress.completed.push(step);
   if(step==='consent'){ state.lead.consent_contact=true; state.lead.consent={method:'disclaimer_then_get_started',version:CONSENT_VERSION,text:CONSENT_TEXT,at:nowIso()};
+    if(!state.lead.mobile_verified){ state.ui.verifyNext='start'; state.ui.otp=''; save(); emit('otp.sent',{mobile:state.lead.mobile,purpose:'verify_mobile'}); go('verify'); return; }
     if(!state.lead.id){ state.lead.id=uid('lead'); state.lead.created_at=nowIso(); state.progress.application_id=uid('app'); emit('lead.created',{first:state.lead.first,last:state.lead.last,email:state.lead.email,mobile:state.lead.mobile,consent_contact:true,consent:state.lead.consent,consent_marketing:state.lead.consent_marketing,intent:state.lead.intent,source:state.lead.source}); } else { emit('lead.updated',{email:state.lead.email,mobile:state.lead.mobile,consent_marketing:state.lead.consent_marketing}); }
     if(state.lead.intent==='assisted'){ state.progress.status='in_progress'; save(); go('fund'); openHelp('book'); return; } }
   else { emit('step.completed',{section:step,snapshot:snapshot(),section_data:sectionData(step)}); }
@@ -509,10 +528,11 @@ function landing(){
   ${resumable?`<div class="resume"><div><b>Welcome back, ${esc(state.lead.first)}.</b> <span class="muted">You've completed ${completedSections().length} of 6 sections. We saved everything.</span></div><div class="row"><button class="btn sm ghost" data-act="restart">Start over</button><button class="btn sm primary" data-act="resume">Continue where I left off</button></div></div>`:''}
   <section class="hero">
     <div class="eyebrow">Self-managed super, set up properly</div>
-    <h1>Start your SMSF in about fifteen minutes. Hand it to a person at any point.</h1>
+    <h1>Start your SMSF application in about fifteen minutes. Hand it to a person at any point.</h1>
     <p class="lede">Tell us who's in the fund and how you want it run. Do it all yourself, or stop wherever you like and a specialist picks it up with you on the phone. Nothing you enter is lost.</p>
     <div class="ctas"><button class="btn primary" data-act="start">Start setting up my fund</button><button class="btn" data-act="talk">Talk to someone first</button></div>
     <div class="small muted">No tax file numbers or ID documents on this page. Those happen inside your secure IdealX account.</div>
+    <div class="links-row"><a href="https://www.idealx.com/" target="_blank" rel="noopener">Already have an SMSF? Move it to IdealX</a><a href="https://www.idealx.com/contact" target="_blank" rel="noopener">I'm an adviser or accountant</a></div>
   </section>
   <section class="trust" aria-label="About IdealX">
     <div class="edit-hint"><span class="pill accent">Board draft</span><span>Click any text in this section to edit it. Edits stay in this browser so you can try wording during review.</span></div>
@@ -555,6 +575,7 @@ function landing(){
       <div><b>About the fund</b><div class="muted">A name, trustee structure, how many members, and roughly how much super is coming in.</div></div>
       <div><b>About each person</b><div class="muted">Name, date of birth, address and contact details for every member and trustee.</div></div>
       <div><b>About the company</b><div class="muted">If you choose a corporate trustee: a company name, or the ACN of one you already have.</div></div>
+      <div><b>How long it takes</b><div class="muted">The form takes about fifteen minutes. Registering the fund with the ATO usually takes a few weeks after the deed is signed.</div></div>
     </div>
   </div>
   <details><summary>Individual trustees or a corporate trustee?</summary>
@@ -586,13 +607,15 @@ function fundStep(){
   const n=Number(state.fund.member_count);
   const tip=state.fund.structure==='individual'&&n===1?`<div class="note">A single-member fund with individual trustees needs a second trustee who isn't a member. That's often a partner or adult child. We'll ask about them next.</div>`:state.fund.structure==='corporate'?`<div class="note">With a corporate trustee, every member becomes a director of the trustee company. ${n===1?'A single-member fund can have you as sole director.':''}</div>`:'';
   return `<div class="col">
-  <div class="stack"><div class="eyebrow">Section 1 of 5</div><h2>Your fund</h2><p class="lede">The basics we need before anything can be drafted.</p>${OPTNOTE}</div>
+  <div class="stack"><div class="eyebrow">Section 1 of 5</div><h2>Your fund</h2><p class="lede">The basics we need before anything can be drafted.</p>${OPTNOTE}<p class="small muted">General information only. IdealX doesn't know your circumstances and nothing on this page is personal financial advice. A licensed adviser can tell you whether an SMSF suits you.</p></div>
   ${field('fund.name','Fund name',{ph:'The '+(state.lead.last||'Smith')+' Superannuation Fund',hint:'Most people use their family name. It can be changed before the deed is prepared.'})}
   ${choices('fund.structure','Trustee structure',[['individual','Individual trustees','Two to six people. Every member is a trustee. Lower set-up cost.'],['corporate','Corporate trustee','A company acts as trustee. Easier when members change or the fund holds property.']],{rerender:true,hint:'Not sure? Choose one; it can be changed on a call before the deed is drafted.'})}
   ${choices('fund.member_count','How many members?',[['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6']],{inline:true,rerender:true,hint:'Members are the people whose super goes into the fund. Up to six.'})}
   ${tip}
-  ${choices('fund.rollover','Is there existing super to bring in?',[['yes','Yes, roll over existing super'],['no','No, starting fresh'],['unsure','Not sure yet']],{})}
-  <div class="grid2">${select('fund.balance','Expected starting balance',BAL)}${select('fund.timeline','When do you want it running?',[['asap','As soon as possible'],['1_3m','In the next 1 to 3 months'],['exploring','Just exploring for now']])}</div>
+  ${choices('fund.rollover','Is there existing super to bring in?',[['yes','Yes, roll over existing super'],['no','No, starting fresh'],['unsure','Not sure yet']],{rerender:true})}
+  ${state.fund.rollover&&state.fund.rollover!=='no'?`<div class="note warn"><b>Insurance.</b> Rolling super out of an existing fund usually cancels any life, TPD or income protection cover held there. Check what cover you have before anything is rolled over. We'll raise it again with you before any rollover is lodged.</div>`:''}
+  ${state.fund.balance==='lt100'?`<div class="note">Running an SMSF has fixed yearly costs (audit, ATO levy, accounts) that are the same whatever the balance. For smaller balances those costs are a larger share of the fund. We'll show you the figures before anything is set up.</div>`:''}
+  <div class="grid2">${select('fund.balance','Expected starting balance',BAL,{rerender:true})}${select('fund.timeline','When do you want it running?',[['asap','As soon as possible'],['1_3m','In the next 1 to 3 months'],['exploring','Just exploring for now']])}</div>
   ${navRow('consent','fund','trustee')}
   </div>`;
 }
@@ -608,6 +631,9 @@ function trusteeStep(){
     <div class="grid2">${field('trustee.second.dob','Date of birth',{type:'date'})}${select('trustee.second.relationship','Relationship to you',[['spouse','Spouse or partner'],['family','Family member'],['business','Business partner'],['friend','Friend'],['other','Other']])}</div>
     <div class="grid2">${field('trustee.second.email','Email',{type:'email',im:'email'})}${field('trustee.second.mobile','Mobile',{type:'tel',im:'tel',ph:'04xx xxx xxx'})}</div>
     ${n===1?address('trustee.second.addr'):''}
+    ${choices('trustee.second.disqualified','Has this person ever been bankrupt, convicted of dishonesty, or disqualified by the ATO or ASIC?',[['no','No'],['yes','Yes'],['unsure','Not sure']],{inline:true,rerender:true})}
+    ${t.second.disqualified==='yes'?`<div class="note warn">Someone in this position can't act as a trustee. A consultant will talk through the options with you before anything is drafted.</div>`:''}
+    ${inviteRow('trustee.second',t.second)}
     <div class="note">We'll email them to confirm they agree to act as trustee. They complete their own identity check later, inside the secure account.</div>`;
   } else {
     body=`<div class="stack"><div class="eyebrow">Section 2 of 5</div><h2>The trustee company</h2><p class="lede">A special-purpose company whose only job is to act as trustee of this fund.</p>${OPTNOTE}</div>
@@ -625,14 +651,17 @@ function membersStep(){
   syncMembers();
   const n=state.members.length;
   const cards=state.members.map((m,i)=>{const p='members.'+i; return `<div class="member">
-    <div class="mh"><h3>Member ${i+1}${i===0?' <span class="muted small">(you)</span>':''}</h3>${i===n-1&&n>1?`<button class="btn sm ghost" data-act="remove-member">Remove</button>`:''}</div>
+    <div class="mh"><h3>Member ${i+1}${i===0?' <span class="muted small">(you)</span>':''}</h3>${i===n-1&&n>1?(state.ui.confirmRemove?`<span class="row"><span class="small">Remove ${esc(m.first||'this member')}'s details?</span><button class="btn sm" data-act="remove-member-confirm">Remove</button><button class="btn sm ghost" data-act="remove-member-cancel">Keep</button></span>`:`<button class="btn sm ghost" data-act="remove-member">Remove</button>`):''}</div>
     <div class="grid3">${field(p+'.first','First name')}${field(p+'.middle','Middle name(s)')}${field(p+'.last','Last name')}</div>
     <div class="grid2">${field(p+'.dob','Date of birth',{type:'date'})}${choices(p+'.resident','Australian resident for tax?',[['yes','Yes'],['no','No']],{inline:true})}</div>
     <div class="grid2">${field(p+'.email','Email',{type:'email',im:'email'})}${field(p+'.mobile','Mobile',{type:'tel',im:'tel',ph:'04xx xxx xxx'})}</div>
     ${address(p+'.addr')}
     ${state.fund.structure==='corporate'?`<div class="grid2">${field(p+'.director_id','Director ID',{im:'numeric',max:19,ph:'036 ...',hint:'15 digits, starts with 036. Apply at abrs.gov.au if they don\'t have one yet.'})}${state.trustee.company_mode!=='existing'?field(p+'.birthplace','Place of birth',{ph:'Town, country'}):''}</div>`:''}
     ${choices(p+'.employer_contrib','Will an employer pay super into the fund?',[['yes','Yes'],['no','No'],['unsure','Not sure']],{inline:true})}
-    ${state.fund.rollover!=='no'?`<div class="grid3">${field(p+'.rollover_funds','Existing super fund(s) to roll in',{ph:'e.g. AustralianSuper, Hostplus'})}${field(p+'.rollover_member_no','Member number(s)',{ph:'If handy'})}${select(p+'.rollover_balance','Approximate balance',BAL)}</div>`:''}
+    ${state.fund.rollover!=='no'?`<div class="grid3">${field(p+'.rollover_funds','Existing super fund(s) to roll in',{ph:'e.g. AustralianSuper, Hostplus',hint:'Rolling over usually cancels insurance held in that fund. We check this with you before lodging.'})}${field(p+'.rollover_member_no','Member number(s)',{ph:'If handy'})}${select(p+'.rollover_balance','Approximate balance',BAL)}</div>`:''}
+    ${choices(p+'.disqualified','Has this person ever been bankrupt, convicted of dishonesty, or disqualified by the ATO or ASIC?',[['no','No'],['yes','Yes'],['unsure','Not sure']],{inline:true,rerender:true})}
+    ${m.disqualified==='yes'?`<div class="note warn">Someone in this position can't act as a ${state.fund.structure==='corporate'?'director of the trustee company':'trustee'}. A consultant will talk through the options with you before anything is drafted.</div>`:''}
+    ${i>0?inviteRow(p,m):''}
   </div>`;}).join('');
   return `<div class="col">
   <div class="stack"><div class="eyebrow">Section 3 of 5</div><h2>Members</h2><p class="lede">One card per person whose super goes into the fund. ${state.fund.structure==='corporate'?'Each member becomes a director of the trustee company.':state.fund.structure==='individual'?'Each member is also a trustee.':''}</p>${OPTNOTE}</div>
@@ -660,23 +689,39 @@ function reviewStep(){
   const kv=rows=>`<dl class="kv">${rows.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v||'—')}</dd>`).join('')}</dl>`;
   const structure=f.structure==='individual'?'Individual trustees':'Corporate trustee';
   const trusteeRows=f.structure==='individual'?[['Trustee 1',fullName(state.lead)],['Trustee 2',fullName(t.second)],['Relationship',t.second.relationship],['Trustee 2 address',Number(f.member_count)===1?[t.second.addr.street,t.second.addr.suburb,t.second.addr.state,t.second.addr.postcode].filter(Boolean).join(', '):'As member 2']]:[['Company',t.company_name+(t.company_mode==='existing'?' (ACN '+t.acn+')':' (new registration)')],['Registered office',t.company_mode==='new'?(t.office_same==='yes'?'Member 1 home address':[t.office.street,t.office.suburb,t.office.state,t.office.postcode].filter(Boolean).join(', ')):'As registered'],['Directors',state.members.map(fullName).filter(Boolean).join(', ')],['Shareholders',t.company_mode==='new'?(t.shareholders==='other'?(t.shareholders_other||'To be discussed'):'Members in equal shares'):'As registered']];
-  const memberBlocks=state.members.map((m,i)=>`<div class="rv"><div class="rh"><b>Member ${i+1}</b><button class="btn sm ghost" data-act="go" data-to="members">Edit</button></div>${kv([['Name',fullName(m)],['Date of birth',m.dob],['Address',[m.addr.street,m.addr.suburb,m.addr.state,m.addr.postcode].filter(Boolean).join(', ')],['Contact',m.email+' · '+m.mobile],['Tax resident',m.resident],['Employer super',m.employer_contrib],['Rolling in',m.rollover_funds?m.rollover_funds+(m.rollover_member_no?' #'+m.rollover_member_no:'')+(m.rollover_balance?' ('+(BAL.find(x=>x[0]===m.rollover_balance)||[])[1]+')':''):'None listed']].concat(f.structure==='corporate'?[['Director ID',m.director_id],['Place of birth',m.birthplace]]:[]))}</div>`).join('');
+  const memberBlocks=state.members.map((m,i)=>`<div class="rv"><div class="rh"><b>Member ${i+1}</b><button class="btn sm ghost" data-act="go" data-to="members">Edit</button></div>${kv([['Name',fullName(m)],['Date of birth',m.dob],['Address',[m.addr.street,m.addr.suburb,m.addr.state,m.addr.postcode].filter(Boolean).join(', ')],['Contact',m.email+' · '+m.mobile],['Tax resident',m.resident],['Eligibility',m.disqualified==='yes'?'Needs review (bankruptcy, conviction or disqualification)':m.disqualified==='no'?'No bar declared':'Not answered'],['Employer super',m.employer_contrib],['Rolling in',m.rollover_funds?m.rollover_funds+(m.rollover_member_no?' #'+m.rollover_member_no:'')+(m.rollover_balance?' ('+(BAL.find(x=>x[0]===m.rollover_balance)||[])[1]+')':''):'None listed']].concat(f.structure==='corporate'?[['Director ID',m.director_id],['Place of birth',m.birthplace]]:[]))}</div>`).join('');
   return `<div class="col">
   <div class="stack"><div class="eyebrow">Section 5 of 5</div><h2>Check and submit</h2><p class="lede">Have a look over everything. You can edit any section. Blank items are fine; a consultant will complete them with you.</p></div>
   <div class="rv"><div class="rh"><b>Fund</b><button class="btn sm ghost" data-act="go" data-to="fund">Edit</button></div>${kv([['Name',f.name],['Structure',structure],['Members',f.member_count],['Existing super',f.rollover],['Starting balance',(BAL.find(x=>x[0]===f.balance)||[])[1]],['Timeframe',f.timeline]])}</div>
   <div class="rv"><div class="rh"><b>Trustee</b><button class="btn sm ghost" data-act="go" data-to="trustee">Edit</button></div>${kv(trusteeRows)}</div>
   ${memberBlocks}
   <div class="rv"><div class="rh"><b>Banking and contact</b><button class="btn sm ghost" data-act="go" data-to="banking">Edit</button></div>${kv([['Cash account',b.cash_account==='idealx'?'IdealX cash account':'Own bank'],['Primary contact',fullName(state.members[Number(b.primary_contact)]||{})],['Adviser',b.adviser==='yes'?b.adviser_name+(b.adviser_firm?', '+b.adviser_firm:''):'No'],['Reach you by',b.contact_method+', '+b.contact_time]])}</div>
-  <div class="stack tight">
+  ${state.ui.consultant?`<div class="note"><b>Consultant mode.</b> Declarations are made by the applicant, not the consultant. Pressing Send emails ${esc(state.lead.email)} a link to check these details and confirm them after a mobile code. ${state.progress.audit.length} entries on this application are recorded as consultant-entered.</div>`:''}
+  <div class="stack tight" ${state.ui.consultant?'hidden':''}>
     ${check('review.decl_trustee','I understand that trustees are responsible for running the fund in line with superannuation law, and that IdealX provides records, reporting and a platform, not personal advice.')}
     ${check('review.decl_accurate','The details above are true and complete to the best of my knowledge. Each person named has agreed to be included.')}
     ${check('review.decl_advice','I understand the next steps involve identity verification and tax file numbers inside a secure IdealX account, and that no fund exists until the deed is signed and the ATO registers it.')}
   </div>
-  <div class="actions"><button class="btn ghost" data-act="go" data-to="banking">Back</button><div class="right"><button class="btn ghost" data-act="help">Save &amp; get help</button><button class="btn primary" data-act="submit">Submit application</button></div></div>
+  <div class="actions"><button class="btn ghost" data-act="go" data-to="banking">Back</button><div class="right"><button class="btn ghost" data-act="help">Save &amp; get help</button>${state.ui.consultant?`<button class="btn primary" data-act="send-confirm">Send to ${esc(state.lead.first||'applicant')} to confirm</button>`:`<button class="btn primary" data-act="submit">Submit application</button>`}</div></div>
+  </div>`;
+}
+function verifyScreen(){
+  const e=state.ui.errors['ui.otp'];
+  return `<div class="col">
+  <div class="stack"><div class="eyebrow">${state.ui.verifyNext==='resume'?'Welcome back':'One quick check'}</div><h2>Enter the code we sent to ${esc(state.lead.mobile)}</h2><p class="lede">${state.ui.verifyNext==='resume'?'Your saved application opens once we know it\'s you.':'This confirms the number is yours before we save anything against it.'}</p></div>
+  <div class="f ${e?'has-err':''}" data-f="ui.otp"><div class="lr"><label for="f-otp">6-digit code</label>${info('lead.otp')}</div><input id="f-otp" class="otp" data-bind="ui.otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="${esc(state.ui.otp||'')}" ${describedBy('lead.otp')}><div class="err">${esc(e||'')}</div></div>
+  <div class="row"><button class="btn sm ghost" data-act="resend-otp">Send it again</button><button class="btn sm ghost" data-act="go" data-to="consent">Change number</button><span class="small muted" id="otpMsg"></span></div>
+  <p class="small muted">Prototype: any six digits are accepted here. In production the code comes by SMS and expires after ten minutes.</p>
+  <div class="actions"><span></span><div class="right"><button class="btn primary" data-act="verify">Verify and continue</button></div></div>
   </div>`;
 }
 function doneScreen(){
   const b=state.booking;
+  if(state.progress.status==='awaiting_confirmation') return `<div class="col">
+  <div class="stack"><div class="pill warn">Sent for confirmation</div><h2>Sent to ${esc(state.lead.first)} to confirm.</h2><p class="lede">We emailed ${esc(state.lead.email)} a link to check every detail entered on the call and make the three declarations themselves. Nothing is drafted until they do.</p></div>
+  <div class="card stack"><h3>What happens next</h3><ol class="next"><li><b>${esc(state.lead.first)} confirms</b> from the link, after a mobile code.</li><li><b>Then</b> the application is submitted and the steps on the confirmation screen begin.</li><li><b>If nothing happens in 2 days</b>, a reminder SMS goes out and the consultant follows up once.</li></ol></div>
+  <p class="small muted">Audit trail: ${state.progress.audit.length} field entries recorded as consultant-entered.</p>
+  <div class="actions"><button class="btn ghost" data-act="restart">Start another application</button></div></div>`;
   return `<div class="col">
   <div class="stack"><div class="pill good">Submitted</div><h2>Thanks, ${esc(state.lead.first)}. Your fund application is in.</h2><p class="lede">Reference <span class="done-ref">${esc(state.progress.application_id||'').replace('app_','IX-').toUpperCase()}</span>. We've emailed a copy to ${esc(state.lead.email)}.</p></div>
   <div class="card stack"><h3>What happens next</h3><ol class="next">
@@ -684,8 +729,9 @@ function doneScreen(){
     <li><b>Secure account invite.</b> Each member and trustee gets a link to verify their identity and provide their tax file number.</li>
     <li><b>Documents.</b> ${state.fund.structure==='corporate'&&state.trustee.company_mode==='new'?'We register the trustee company, then prepare the trust deed.':'We prepare the trust deed.'} Everyone signs electronically.</li>
     <li><b>Registration.</b> We apply to the ATO for the fund's ABN and TFN, and ${state.banking.cash_account==='idealx'?'open the IdealX cash account':'send you what you need to open the bank account'}.</li>
-    <li><b>Rollovers and contributions.</b> ${state.fund.rollover==='no'?'Once registered, contributions can begin.':'Once registered, we initiate the rollovers you listed.'}</li>
+    <li><b>Rollovers and contributions.</b> ${state.fund.rollover==='no'?'Once registered, contributions can begin.':'Once registered, we confirm any insurance you hold in your existing funds with you, then initiate the rollovers you listed.'}</li>
   </ol></div>
+  <p class="small muted">To stop all follow-up at any time, reply STOP to any SMS or use the unsubscribe link in any email.</p>
   ${b?`<div class="note">Your call with a specialist is booked for <b>${esc(b.label)}</b> Melbourne time.</div>`:`<div class="row"><button class="btn" data-act="help-book">Book a time to walk through the next steps</button><span class="small muted">Optional. Useful if you'd like the documents explained.</span></div>`}
   <div class="actions"><button class="btn ghost" data-act="restart">Start another application</button></div>
   </div>`;
@@ -693,15 +739,22 @@ function doneScreen(){
 function handoffScreen(){
   const b=state.booking, st=state.progress.status, done=completedSections().length;
   const head=st==='booked'?`Booked. We'll call you ${esc(b.label)}.`:st==='callback'?'Got it. A specialist will call you shortly.':'Saved. Your link is on its way.';
-  const sub=st==='booked'?`A calendar invite and SMS reminder are on their way to ${esc(state.lead.email)} and ${esc(state.lead.mobile)}. The specialist will have everything you've entered in front of them.`:st==='callback'?`We call during business hours, usually within the hour, from a Melbourne number. The specialist will have everything you've entered in front of them.`:`We emailed ${esc(state.lead.email)} a link that opens this application exactly where you left it. It works on any device.`;
+  const sub=st==='booked'?`A calendar invite and SMS reminder are on their way to ${esc(state.lead.email)} and ${esc(state.lead.mobile)}. The specialist will have everything you've entered in front of them.`:st==='callback'?`We call during business hours, usually within the hour, from a Melbourne number. The specialist will have everything you've entered in front of them.`:`We emailed ${esc(state.lead.email)} a link that opens this application exactly where you left it, on any device, after a code to your mobile.`;
   return `<div class="col">
   <div class="stack"><div class="pill accent">${st==='booked'?'Call booked':st==='callback'?'Callback requested':'Progress saved'}</div><h2>${head}</h2><p class="lede">${sub}</p></div>
   <div class="card stack"><div class="section-h"><h3>What we have so far</h3><span class="muted small">${done} of 6 sections</span></div>
   <div class="status-line">${['contact','fund','trustee','members','banking','review'].map(s=>`<span class="pill ${completedSections().includes(s)?'good':''}">${s}</span>`).join('')}</div>
-  <p class="small muted">Anything you add before the call is saved too.</p></div>
-  <div class="actions"><button class="btn ghost" data-act="go" data-to="landing">Back to start</button><div class="right"><button class="btn primary" data-act="resume">Keep going anyway</button></div></div>
+  <p class="small muted">Anything you add before the call is saved too. To stop all follow-up, reply STOP to any SMS or use the unsubscribe link in any email.</p></div>
+  <div class="actions"><button class="btn ghost" data-act="go" data-to="landing">Back to start</button><div class="right"><button class="btn primary" data-act="continue">Keep going anyway</button></div></div>
   </div>`;
 }
+function inviteRow(path,o){ return `<div class="invite-row" data-invite="${path}">${inviteInner(path,o)}</div>`; }
+function inviteInner(path,o){
+  const name=o.first||'them';
+  if(o.invite_sent) return `<div class="badge"><span class="pill good">Invite sent</span><span>${esc(name)} has their own link and privacy notice. Anything they enter replaces what's here.</span></div>`;
+  return isEmail(o.email)?`<div class="row"><button class="btn sm" data-act="invite" data-path="${path}">Invite ${esc(name)} to fill in their own details</button><span class="small muted">They get their own link and privacy notice.</span></div>`:`<div class="small muted">Add ${esc(name)}'s email to send them a link to fill in their own details.</div>`;
+}
+function refreshInvite(p){ const m=p.match(/^(members\.\d+|trustee\.second)\.(email|first)$/); if(!m) return; const box=document.querySelector(`[data-invite="${m[1]}"]`); if(box) box.innerHTML=inviteInner(m[1],get(m[1])||{}); }
 function navRow(prev,step,next){
   return `<div class="actions"><button class="btn ghost" data-act="go" data-to="${prev}">Back</button><div class="right"><button class="btn ghost" data-act="help">Prefer to talk it through?</button><button class="btn primary" data-act="complete" data-step="${step}" data-next="${next}">Continue</button></div></div>`;
 }
@@ -710,11 +763,18 @@ function navRow(prev,step,next){
 let helpDay=null;
 function openHelp(view){ state.ui.helpView=view||'menu'; if(view==='book'||!view) helpDay=null; renderOverlay(); }
 function closeHelp(){ state.ui.helpView=null; renderOverlay(); }
-function businessDays(n){ const out=[]; const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+1); while(out.length<n){ const wd=d.getDay(); if(wd!==0&&wd!==6) out.push(new Date(d)); d.setDate(d.getDate()+1);} return out; }
-const fmtDay=d=>new Intl.DateTimeFormat('en-AU',{weekday:'short'}).format(d);
-const fmtDate=d=>new Intl.DateTimeFormat('en-AU',{weekday:'long',day:'numeric',month:'long'}).format(d);
-const dkey=d=>d.toISOString().slice(0,10);
-function slotsFor(d){ const out=[]; for(let h=9;h<17;h++) for(const m of [0,30]){ const t=`${String(h).padStart(2,'0')}:${m?'30':'00'}`; const seed=(d.getDate()*31+h*7+m)%11; out.push({t,taken:seed===3||seed===8}); } return out; }
+const MEL='Australia/Melbourne';
+const VISITOR_TZ=(()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||''; }catch(e){ return ''; } })();
+function tzParts(date,tz){ const dtf=new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',weekday:'short'}); const o={}; dtf.formatToParts(date).forEach(x=>{ o[x.type]=x.value; }); return {y:+o.year,m:+o.month,d:+o.day,h:+o.hour,mi:+o.minute,s:+o.second,wd:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(o.weekday)}; }
+function tzOffsetMin(date,tz){ const p=tzParts(date,tz); return (Date.UTC(p.y,p.m-1,p.d,p.h,p.mi,p.s)-date.getTime())/60000; }
+function zonedToUtc(y,m,d,hh,mm,tz){ const guess=Date.UTC(y,m-1,d,hh,mm); let off=tzOffsetMin(new Date(guess),tz); let utc=guess-off*60000; const off2=tzOffsetMin(new Date(utc),tz); if(off2!==off) utc=guess-off2*60000; return new Date(utc); }
+function businessDays(n){ const t=tzParts(new Date(),MEL); const base=Date.UTC(t.y,t.m-1,t.d); const out=[]; let i=1; while(out.length<n&&i<40){ const dt=new Date(base+i*864e5); const wd=dt.getUTCDay(); if(wd!==0&&wd!==6) out.push({key:dt.toISOString().slice(0,10),y:dt.getUTCFullYear(),m:dt.getUTCMonth()+1,d:dt.getUTCDate(),wd}); i++; } return out; }
+const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmtDay=d=>WD[d.wd];
+const fmtDate=d=>new Intl.DateTimeFormat('en-AU',{timeZone:MEL,weekday:'long',day:'numeric',month:'long'}).format(zonedToUtc(d.y,d.m,d.d,12,0,MEL));
+const dkey=d=>d.key;
+function slotsFor(day){ const out=[]; for(let h=9;h<17;h++) for(const mi of [0,30]){ const utc=zonedToUtc(day.y,day.m,day.d,h,mi,MEL); const t=`${String(h).padStart(2,'0')}:${mi?'30':'00'}`; const seed=(day.d*31+h*7+mi)%11; const local=VISITOR_TZ&&VISITOR_TZ!==MEL?new Intl.DateTimeFormat('en-AU',{hour:'numeric',minute:'2-digit'}).format(utc):null; out.push({t,iso:utc.toISOString(),local,taken:seed===3||seed===8}); } return out; }
+function melOpenNow(){ const p=tzParts(new Date(),MEL); return p.wd>=1&&p.wd<=5&&p.h>=9&&p.h<17; }
 function renderOverlay(){
   const ov=$('#overlay'); const v=state.ui.helpView; if(!v){ ov.innerHTML=''; return; }
   let body='';
@@ -726,25 +786,25 @@ function renderOverlay(){
   } else if(v==='book'){
     const days=businessDays(10); if(!helpDay) helpDay=dkey(days[0]); const cur=days.find(d=>dkey(d)===helpDay)||days[0];
     const sel=state.booking&&state.booking.date===helpDay?state.booking.time:null;
-    body=`<div class="sh"><div><div class="eyebrow">Book a call</div><h3 style="margin-top:6px">Choose a time</h3><p class="small muted">30 minutes, Melbourne time. A specialist calls ${esc(state.lead.mobile||'your mobile')}.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
-    <div class="days">${days.map(d=>`<button class="day ${dkey(d)===helpDay?'on':''}" data-act="pick-day" data-day="${dkey(d)}"><span>${fmtDay(d)}</span><b>${d.getDate()}</b><span>${new Intl.DateTimeFormat('en-AU',{month:'short'}).format(d)}</span></button>`).join('')}</div>
+    body=`<div class="sh"><div><div class="eyebrow">Book a call</div><h3 style="margin-top:6px">Choose a time</h3><p class="small muted">30 minutes, Melbourne time${VISITOR_TZ&&VISITOR_TZ!==MEL?', with your local time shown under each slot':''}. A specialist calls ${esc(state.lead.mobile||'your mobile')}.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
+    <div class="days">${days.map(d=>`<button class="day ${dkey(d)===helpDay?'on':''}" data-act="pick-day" data-day="${dkey(d)}"><span>${fmtDay(d)}</span><b>${d.d}</b><span>${MON[d.m-1]}</span></button>`).join('')}</div>
     <div class="small"><b>${fmtDate(cur)}</b></div>
-    <div class="slots">${slotsFor(cur).map(s=>`<button class="slot ${sel===s.t?'on':''}" data-act="pick-slot" data-time="${s.t}" ${s.taken?'disabled':''}>${s.t}</button>`).join('')}</div>
-    <button class="btn primary full" data-act="confirm-book" ${sel?'':'disabled'}>${sel?'Confirm '+fmtDay(cur)+' '+cur.getDate()+' at '+sel:'Pick a slot to continue'}</button>`;
+    <div class="slots">${slotsFor(cur).map(s=>`<button class="slot ${sel===s.t?'on':''}" data-act="pick-slot" data-time="${s.t}" data-iso="${s.iso}" data-local="${s.local||''}" ${s.taken?'disabled':''}>${s.t}${s.local?`<small>${s.local} local</small>`:''}</button>`).join('')}</div>
+    <button class="btn primary full" data-act="confirm-book" ${sel?'':'disabled'}>${sel?'Confirm '+fmtDay(cur)+' '+cur.d+' at '+sel+' Melbourne time':'Pick a slot to continue'}</button>`;
   } else if(v==='callback'){
-    body=`<div class="sh"><div><div class="eyebrow">Callback</div><h3 style="margin-top:6px">We'll call ${esc(state.lead.mobile)}</h3><p class="small muted">Between 9am and 5pm Melbourne time, usually within the hour. If we miss you, we try again and send an SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
-    ${select('banking.contact_time','Best time',[['now','As soon as possible'],['morning','Morning (9 to 12)'],['midday','Midday (12 to 2)'],['afternoon','Afternoon (2 to 5)']])}
+    body=`<div class="sh"><div><div class="eyebrow">Callback</div><h3 style="margin-top:6px">We'll call ${esc(state.lead.mobile)}</h3><p class="small muted">${melOpenNow()?'Usually within the hour during business hours, 9am to 5pm Melbourne time.':'It\'s outside business hours in Melbourne right now. We\'ll call from 9am on the next business day.'} If we miss you, we try again and send an SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
+    ${select('banking.contact_time','Best time',[['now',melOpenNow()?'As soon as someone\'s free':'First thing next business day'],['morning','Morning (9 to 12)'],['midday','Midday (12 to 2)'],['afternoon','Afternoon (2 to 5)']])}
     <button class="btn primary full" data-act="confirm-callback">Request a callback</button>`;
   } else if(v==='link'){
-    body=`<div class="sh"><div><div class="eyebrow">Finish later</div><h3 style="margin-top:6px">We'll email a link to ${esc(state.lead.email)}</h3><p class="small muted">It opens this application exactly where you left it. If you don't come back within a day, a specialist checks in by SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
+    body=`<div class="sh"><div><div class="eyebrow">Finish later</div><h3 style="margin-top:6px">We'll email a link to ${esc(state.lead.email)}</h3><p class="small muted">It opens this application exactly where you left it, after a code to your mobile so nobody else can read it. If you don't come back within a day, a specialist checks in by SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
     <button class="btn primary full" data-act="confirm-link">Send the link</button>`;
   }
   ov.innerHTML=`<div class="scrim" data-act="help-close-scrim"><div class="sheet" role="dialog" aria-modal="true">${body}</div></div>`;
 }
 function finishHandoff(kind, data){
   state.progress.status=kind; state.progress.last_active=nowIso(); save();
-  emit(kind==='booked'?'booking.created':kind==='callback'?'callback.requested':'progress.saved',Object.assign({snapshot:snapshot()},data||{}));
-  emit('partial.submitted',{snapshot:snapshot(),record:exportRecord(),handoff:kind});
+  emit(kind==='booked'?'booking.created':kind==='callback'?'callback.requested':'progress.saved',Object.assign({snapshot:snapshot()},kind==='booked'?{conversion:conversion('call_booked')}:{},data||{}));
+  emit('partial.submitted',{crm:crmView(),handoff:kind,note:'Full record stays in the application store. The CRM receives contact, status, source and progress only.'});
   closeHelp(); hideNudge(); go('handoff');
 }
 
@@ -753,14 +813,19 @@ let idleTimer=null;
 function armIdle(){ clearTimeout(idleTimer); if(!FORM_STEPS.includes(state.progress.step)||!state.lead.id) return; idleTimer=setTimeout(showNudge,45000); }
 function showNudge(){ if(state.ui.helpView||$('#nudge').innerHTML) return; $('#nudge').innerHTML=`<div class="nudge" role="status"><p><b>Stuck on something?</b> Save what you've done and a specialist takes it from here.</p><button class="btn sm primary" data-act="help">Save &amp; get help</button><button class="btn sm ghost" data-act="nudge-close" aria-label="Dismiss">✕</button></div>`; emit('nudge.shown',{trigger:'idle_45s',snapshot:snapshot()}); }
 function hideNudge(){ $('#nudge').innerHTML=''; }
+let leaveTimer=null;
 function markAbandoned(trigger){
   if(!state.lead.id||state.progress.status!=='in_progress') return;
   state.progress.status='abandoned'; save();
-  emit('session.abandoned',{trigger,last_step:state.progress.step,snapshot:snapshot(),nurture:'enrolled',next_touch:'sms_resume_link_in_10m'});
+  emit('session.abandoned',{trigger,last_step:state.progress.step,snapshot:snapshot(),nurture:'enrolled',next_touch:'sms_resume_link_now'});
+}
+function markLeft(trigger){
+  if(!state.lead.id||state.progress.status!=='in_progress') return;
+  emit('session.left',{trigger,last_step:state.progress.step,snapshot:snapshot(),abandonment_confirmed_after:'30 minutes without return'});
 }
 function markResumed(){ if(state.progress.status==='abandoned'){ state.progress.status='in_progress'; save(); emit('session.resumed',{step:state.progress.step,nurture:'paused'}); } }
-document.addEventListener('visibilitychange',()=>{ if(document.hidden) markAbandoned('tab_hidden'); else markResumed(); });
-window.addEventListener('pagehide',()=>markAbandoned('page_closed'));
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){ markLeft('tab_hidden'); clearTimeout(leaveTimer); leaveTimer=setTimeout(()=>markAbandoned('inactive_30m'),1800000); } else { clearTimeout(leaveTimer); markResumed(); } });
+window.addEventListener('pagehide',()=>markLeft('page_closed'));
 
 /* ---------- export ---------- */
 function exportRecord(){ const r=JSON.parse(JSON.stringify(state)); delete r.ui; return r; }
@@ -769,17 +834,42 @@ function exportRecord(){ const r=JSON.parse(JSON.stringify(state)); delete r.ui;
 function renderDrawer(){
   const d=$('#drawer'); d.hidden=!drawerOpen; document.body.classList.toggle('drawer-open',drawerOpen); if(!drawerOpen) return;
   const tab=state.ui.notesTab;
-  const tabs=[['flow','Flow'],['theme','Theme'],['events','Events ('+events.length+')'],['data','Record'],['nurture','Nurture']];
+  const tabs=[['flow','Flow'],['check','Launch checklist'],['theme','Theme'],['events','Events ('+events.length+')'],['data','Record'],['nurture','Nurture']];
   let body='';
   if(tab==='flow'){
-    body=`<div class="status-line"><span class="pill ${ {new:'',in_progress:'accent',saved:'warn',booked:'good',callback:'good',abandoned:'bad',submitted:'good'}[state.progress.status]||''}">${state.progress.status.replace('_',' ')}</span><span class="muted">step: <b class="mono">${state.progress.step}</b></span>${state.lead.id?`<span class="muted mono small">${state.lead.id}</span>`:''}</div>
+    body=`<div class="status-line"><span class="pill ${ {new:'',in_progress:'accent',saved:'warn',booked:'good',callback:'good',abandoned:'bad',submitted:'good',awaiting_confirmation:'warn'}[state.progress.status]||''}">${state.progress.status.replace(/_/g,' ')}</span><span class="pill">routing: ${qualification()}</span>${state.ui.consultant?'<span class="pill warn">consultant mode</span>':''}<span class="muted">step: <b class="mono">${state.progress.step}</b></span>${state.lead.id?`<span class="muted mono small">${state.lead.id}</span>`:''}</div>
     <div class="journey"><b>1 · Self-serve</b><div class="steps">Landing → contact + Get started → fund → trustee → members → banking → review → submitted. Hands off to secure onboarding for TFN and ID.</div></div>
     <div class="journey"><b>2 · Assisted tap-out</b><div class="steps">Any step → "Save &amp; get help" → book a slot, callback, or resume link. Partial record is submitted to the CRM with what's done.</div></div>
-    <div class="journey"><b>3 · Abandon and re-engage</b><div class="steps">A disclaimer above the Get started button on screen one gives consent to follow up. Leaving the tab, closing the page, or 45 s idle after consent fires an abandonment event and enrols the lead in the nurture sequence.</div></div>
+    <div class="journey"><b>3 · Abandon and re-engage</b><div class="steps">A disclaimer above Get started gives consent; a mobile code confirms the number before the lead exists. Leaving the page records <b>session.left</b>; abandonment is confirmed only after 30 minutes without return, then the nurture sequence starts. Returning cancels it.</div></div>
+    <div class="journey"><b>4 · Consultant completes it by phone</b><div class="steps">Consultant mode records every field as consultant-entered and replaces Submit with a confirm-and-declare link sent to the applicant.</div></div>
     <div class="stack tight"><div class="eyebrow">Demo controls</div>
-    <div class="row"><button class="btn sm" data-act="demo-fill">Fill with example data</button><button class="btn sm" data-act="demo-abandon">Simulate abandonment</button><button class="btn sm ghost" data-act="restart">Reset prototype</button></div>
-    <div class="row">${['landing','consent','fund','trustee','members','banking','review','done','handoff'].map(s=>`<button class="btn sm ghost" data-act="jump" data-to="${s}">${s}</button>`).join('')}</div></div>
+    <div class="row"><button class="btn sm" data-act="demo-fill">Fill with example data</button><button class="btn sm" data-act="demo-abandon">Simulate abandonment</button><button class="btn sm ${state.ui.consultant?'primary':''}" data-act="consultant-toggle">${state.ui.consultant?'Exit consultant mode':'Consultant mode'}</button><button class="btn sm ghost" data-act="restart">Reset prototype</button></div>
+    <div class="row">${['landing','consent','verify','fund','trustee','members','banking','review','done','handoff'].map(s=>`<button class="btn sm ghost" data-act="jump" data-to="${s}">${s}</button>`).join('')}</div></div>
     <div class="small muted">Example data is marked as such in the record and is never a real person.</div>`;
+  } else if(tab==='check'){
+    const C=[
+      ['Advice boundary','Consultant scripts stay factual; general advice warning on the page; who may give personal advice under the AFSL and with what documents; calls recorded.'],
+      ['Ad platform rules','Google financial services advertiser verification for Australia; Meta restrictions; "fifteen minutes" describes the form, not the fund.'],
+      ['Calls and messages','Do Not Call Register washing before every call list; permitted calling hours; STOP and unsubscribe halt every channel; SMS sender ID registered.'],
+      ['Mobile verification and bots','OTP before a lead exists (built here); bot protection on the contact screen; rate limits on code sends.'],
+      ['Sensitive data stays out of the CRM','CRM receives contact, status, source and progress only (built here). Dates of birth, addresses and director IDs stay in the application store, hosted in Australia, encrypted at rest.'],
+      ['Tracking pixels','Pixels only on the landing and contact screens; automatic form-field matching off; consent mode configured.'],
+      ['Resume links','Signed, expiring links that ask for a mobile code before showing anything (modelled here).'],
+      ['Retention','Delete partial records 90 days after last activity if not converted; publish the rule in the collection notice.'],
+      ['Third-party data','Each named person gets their own notice and invite link (built here); applicant declares they have agreed to be included.'],
+      ['Abandonment timing','Confirmed only after 30 minutes without return (built here); returning cancels queued messages.'],
+      ['Duplicates','Merge by email and mobile; a partner who starts separately joins the existing application.'],
+      ['Speed to lead','Define the callback service level including weekends when ad traffic peaks; staff it before spend starts.'],
+      ['Qualification policy','Decide routing for the "explore" tier (under $100k or just exploring); never push low-balance set-ups.'],
+      ['Timezones and calendar','Slots generated in Melbourne time with local equivalents (built here); real calendar with round-robin availability behind it.'],
+      ['Declarations','Applicant makes the declarations themselves via a confirm link when a consultant completes the form (built here).'],
+      ['Minors','Under-18 members with a guardian trustee are out of scope for launch; say so or build it.'],
+      ['Deed provider mapping','Map every field to the chosen provider\'s order form; add title, gender or occupation if their form needs them.'],
+      ['Accessibility','Tooltips linked to fields for screen readers (built here); full keyboard pass; colour contrast check on every theme.'],
+      ['Offline conversions','Send application_submitted and call_booked back to Google and Meta with the stored click IDs (payload built here).'],
+      ['Field-level analytics','last_field is recorded on every event (built here); report where people stop.']
+    ];
+    body=`<div class="small muted">Before any money goes into ads. Items marked "built here" are modelled in this prototype; the rest are policy or production work.</div><ol class="checklist">${C.map(([k,v])=>`<li><b>${k}.</b> ${v}</li>`).join('')}</ol>`;
   } else if(tab==='theme'){
     const k=currentBrand();
     body=`<div class="small muted">Colour tokens and fonts were read from idealx.com\'s stylesheet on 14 October 2026. <b>IdealX Light</b> is the site as published. The other three only use site colours; values marked derived are new. Pick one in the bar at the top and the whole prototype re-skins.</div>
@@ -789,12 +879,13 @@ function renderDrawer(){
     <div class="row"><button class="btn sm ghost" data-act="reset-copy">Reset trust-section copy</button><span class="small muted">Copy edits live in this browser only.</span></div>`;
   } else if(tab==='events'){
     body=`<div class="f"><label for="f-webhook">Webhook URL <span class="muted">(optional)</span></label><input id="f-webhook" data-bind="ui.webhook" value="${esc(state.ui.webhook)}" placeholder="https://example.com/hooks/smsf-start"><div class="hint">Every event below is POSTed here as JSON when set. Leave blank for the demo.</div></div>
+    <div class="small muted">Payloads are the CRM view. Dates of birth, addresses, director IDs and places of birth stay in the application store (Record tab) and are never sent to the marketing CRM. Submitted and booked events carry click IDs for offline conversion upload.</div>
     <div class="row"><button class="btn sm" data-act="copy-events">Copy all as JSON</button><span class="small muted" id="copyMsg"></span></div>
     ${events.length?events.map(e=>`<div class="ev"><div class="evh"><b>${esc(e.event)}</b><span class="muted mono">${new Date(e.occurred_at).toLocaleTimeString('en-AU')}</span></div><pre>${esc(JSON.stringify(e,null,1))}</pre></div>`).join(''):'<div class="muted">No events yet. Start the form to see what the CRM would receive.</div>'}`;
   } else if(tab==='data'){
-    body=`<div class="small muted">The lead and application record as it would be stored. TFNs and identity documents are deliberately absent.</div><pre class="json">${esc(JSON.stringify(exportRecord(),null,2))}</pre>`;
+    body=`<div class="small muted">The lead and application record as it would be stored, in Australia, encrypted at rest. TFNs and identity documents are deliberately absent. Policy: deleted 90 days after last activity if not converted.</div><pre class="json">${esc(JSON.stringify(exportRecord(),null,2))}</pre>`;
   } else {
-    body=`<div class="small muted">Sequence after <b>session.abandoned</b>. Stops on submit, booking, callback completion, opt-out, or three unanswered calls.</div>
+    body=`<div class="small muted">Sequence after <b>session.abandoned</b>, which fires only after 30 minutes without return. Stops on submit, booking, callback completion, STOP or unsubscribe, or three unanswered calls.</div>
     <div class="tablewrap"><table class="seq"><thead><tr><th>When</th><th>Channel</th><th>Content</th><th>Goal</th></tr></thead><tbody>${NURTURE.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="small muted">After a <b>booking.created</b>: confirmation email + SMS at once, SMS reminder one hour before, and a sales task with the saved record. A no-show re-enters the sequence at T+1 business day.</div>
     <div class="small muted">Segmentation on <b>lead.created</b>: intent (self vs assisted), balance range, timeframe and campaign source are stored for routing and reporting.</div>`;
@@ -805,12 +896,12 @@ function renderDrawer(){
 
 /* ---------- demo helpers ---------- */
 function demoFill(){
-  const L=state.lead; Object.assign(L,{first:'Priya',last:'Natarajan',email:'priya.example@example.com',mobile:'0412 000 123',consent_contact:true,consent_marketing:true,intent:'self'});
+  const L=state.lead; Object.assign(L,{first:'Priya',last:'Natarajan',email:'priya.example@example.com',mobile:'0412 000 123',mobile_verified:true,verified_at:nowIso(),consent_contact:true,consent_marketing:true,intent:'self'});
   L.source=Object.assign({},L.source,{utm_source:'meta',utm_medium:'paid_social',utm_campaign:'smsf_start_q4',example:true});
   Object.assign(state.fund,{name:'The Natarajan Superannuation Fund',structure:'corporate',member_count:'2',rollover:'yes',balance:'250_500',timeline:'asap'});
   Object.assign(state.trustee,{company_mode:'new',company_name:'Natarajan Super Pty Ltd',office_same:'yes',shareholders:'members',directors_confirmed:true});
-  state.members=[Object.assign(blankMember(),{first:'Priya',middle:'Lakshmi',last:'Natarajan',dob:'1984-03-12',email:'priya.example@example.com',mobile:'0412 000 123',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'AustralianSuper',rollover_member_no:'12345678',rollover_balance:'250_500',director_id:'036 111 222 333 444',birthplace:'Chennai, India'}),
-    Object.assign(blankMember(),{first:'Daniel',middle:'',last:'Okafor',dob:'1982-09-30',email:'daniel.example@example.com',mobile:'0433 000 456',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'Hostplus',rollover_member_no:'',rollover_balance:'100_250',director_id:'036 555 666 777 888',birthplace:'Lagos, Nigeria'})];
+  state.members=[Object.assign(blankMember(),{first:'Priya',middle:'Lakshmi',last:'Natarajan',dob:'1984-03-12',email:'priya.example@example.com',mobile:'0412 000 123',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'AustralianSuper',rollover_member_no:'12345678',rollover_balance:'250_500',director_id:'036 111 222 333 444',birthplace:'Chennai, India',disqualified:'no'}),
+    Object.assign(blankMember(),{first:'Daniel',middle:'',last:'Okafor',dob:'1982-09-30',email:'daniel.example@example.com',mobile:'0433 000 456',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'Hostplus',rollover_member_no:'',rollover_balance:'100_250',director_id:'036 555 666 777 888',birthplace:'Lagos, Nigeria',disqualified:'no'})];
   Object.assign(state.banking,{cash_account:'idealx',primary_contact:'0',adviser:'no',contact_method:'phone',contact_time:'morning'});
   L.consent={method:'disclaimer_then_get_started',version:CONSENT_VERSION,text:CONSENT_TEXT,at:nowIso()};
   if(!L.id){ L.id=uid('lead'); L.created_at=nowIso(); state.progress.application_id=uid('app'); emit('lead.created',{first:L.first,last:L.last,email:L.email,mobile:L.mobile,consent_contact:true,consent:L.consent,consent_marketing:true,intent:'self',source:L.source,example:true}); }
@@ -821,11 +912,13 @@ function demoFill(){
 /* ---------- render ---------- */
 function render(){
   const step=state.progress.step;
-  const views={landing,consent,fund:fundStep,trustee:trusteeStep,members:membersStep,banking:bankingStep,review:reviewStep,done:doneScreen,handoff:handoffScreen};
+  const views={landing,consent,verify:verifyScreen,fund:fundStep,trustee:trusteeStep,members:membersStep,banking:bankingStep,review:reviewStep,done:doneScreen,handoff:handoffScreen};
+  if(step!=='members') state.ui.confirmRemove=false;
   $('#app').innerHTML=(views[step]||landing)();
   if(step==='landing') applyCopy();
   const inForm=FORM_STEPS.includes(step);
   $('#helpBtn').hidden=!(inForm&&state.lead.id);
+  $('#helpBtn').textContent=state.ui.consultant?'Consultant: save':'Save & get help';
   $('#progress').hidden=!inForm; $('#stepline').hidden=!inForm;
   if(inForm){ const i=FORM_STEPS.indexOf(step); $('#progress i').style.width=((i+1)/FORM_STEPS.length*100)+'%'; $('#stepline').innerHTML=`<span>Section <b>${i+1}</b> of ${FORM_STEPS.length} · <b>${STEP_TITLES[step]}</b></span><span>Saved as you go</span>`; }
   const dob=document.querySelectorAll('input[type=date]'); const max=new Date(); max.setFullYear(max.getFullYear()-18); dob.forEach(el=>el.max=max.toISOString().slice(0,10));
@@ -838,7 +931,8 @@ document.addEventListener('input',e=>{
   const v=el.type==='checkbox'?el.checked:el.value; set(p,v);
   if(p.startsWith('lead.')&&state.members[0]){ const k=p.slice(5); if(['first','last','email','mobile'].includes(k)&&!state.progress.completed.includes('members')) state.members[0][k]=v; }
   const wrap=el.closest('[data-f]'); if(wrap&&state.ui.errors[p]){ delete state.ui.errors[p]; wrap.classList.remove('has-err'); }
-  state.progress.last_active=nowIso(); save(); armIdle();
+  refreshInvite(p);
+  state.progress.last_active=nowIso(); state.progress.last_field=p; if(state.ui.consultant){ state.progress.audit.push({path:p,by:'consultant',at:nowIso()}); if(state.progress.audit.length>300) state.progress.audit.shift(); } save(); armIdle();
   if(el.dataset.rerender){ if(p==='fund.member_count'||p==='fund.structure') syncMembers(); render(); }
 });
 document.addEventListener('change',e=>{ const el=e.target; if(el.dataset.bind&&(el.tagName==='SELECT'||el.type==='radio'||el.type==='checkbox')) el.dispatchEvent(new Event('input',{bubbles:true})); });
@@ -846,26 +940,36 @@ document.addEventListener('click',e=>{
   const bp=e.target.closest('[data-brand-pick]'); if(bp){ applyBrand(bp.dataset.brandPick); return; }
   const tipBtn=e.target.closest('.info');
   document.querySelectorAll('.lr.open').forEach(x=>{ if(!tipBtn||x!==tipBtn.parentElement) x.classList.remove('open'); });
-  if(tipBtn){ e.preventDefault(); tipBtn.parentElement.classList.toggle('open'); return; }
+  if(tipBtn){ e.preventDefault(); const open=tipBtn.parentElement.classList.toggle('open'); tipBtn.setAttribute('aria-expanded',open?'true':'false'); return; }
   const t=e.target.closest('[data-act]'); if(!t) return;
   const a=t.dataset.act;
   if(a==='help-close-scrim'&&e.target!==t) return;
   switch(a){
     case 'start': state.lead.intent='self'; go('consent'); break;
     case 'talk': state.lead.intent='assisted'; go('consent'); break;
-    case 'resume': markResumed(); go(state.progress.completed.includes('consent')?nextIncomplete():'consent'); break;
+    case 'resume': if(!state.lead.id){ go('consent'); break; } state.ui.verifyNext='resume'; state.ui.otp=''; save(); emit('otp.sent',{mobile:state.lead.mobile,purpose:'resume_link'}); go('verify'); break;
+    case 'continue': markResumed(); go(nextIncomplete()); break;
+    case 'verify': { const code=(state.ui.otp||'').replace(/\s/g,''); if(!/^\d{6}$/.test(code)){ state.ui.errors={'ui.otp':'Enter the 6-digit code from the SMS.'}; render(); return; } state.lead.mobile_verified=true; state.lead.verified_at=nowIso(); emit('otp.verified',{mobile:state.lead.mobile,purpose:state.ui.verifyNext});
+      if(!state.lead.id){ state.lead.id=uid('lead'); state.lead.created_at=nowIso(); state.progress.application_id=uid('app'); emit('lead.created',{first:state.lead.first,last:state.lead.last,email:state.lead.email,mobile:state.lead.mobile,mobile_verified:true,consent_contact:true,consent:state.lead.consent,consent_marketing:state.lead.consent_marketing,intent:state.lead.intent,source:state.lead.source}); if(!state.progress.completed.includes('consent')) state.progress.completed.push('consent'); }
+      const nx=state.ui.verifyNext; state.ui.verifyNext=null; if(nx==='resume'){ markResumed(); go(nextIncomplete()); } else if(state.lead.intent==='assisted'){ state.progress.status='in_progress'; save(); go('fund'); openHelp('book'); } else go('fund'); break; }
+    case 'resend-otp': emit('otp.sent',{mobile:state.lead.mobile,purpose:'resend'}); $('#otpMsg').textContent='Sent again.'; break;
     case 'restart': { const wh=state.ui.webhook; state=fresh(); state.ui.webhook=wh; captureSource(); hideNudge(); save(); go('landing'); break; }
     case 'go': go(t.dataset.to); break;
     case 'complete': completeStep(t.dataset.step,t.dataset.next); break;
     case 'add-member': state.fund.member_count=String(Math.min(6,state.members.length+1)); syncMembers(); save(); render(); break;
-    case 'remove-member': state.fund.member_count=String(Math.max(1,state.members.length-1)); syncMembers(); save(); render(); break;
-    case 'submit': { const E=validators.review(); if(Object.keys(E).length){ state.ui.errors=E; render(); return; } state.progress.completed.push('review'); state.progress.status='submitted'; save(); emit('application.submitted',{record:exportRecord()}); hideNudge(); go('done'); break; }
+    case 'remove-member': { const last=state.members[state.members.length-1]||{}; if(last.first||last.last||last.dob||last.email){ state.ui.confirmRemove=true; render(); } else { state.fund.member_count=String(Math.max(1,state.members.length-1)); syncMembers(); save(); render(); } break; }
+    case 'remove-member-confirm': state.ui.confirmRemove=false; state.fund.member_count=String(Math.max(1,state.members.length-1)); syncMembers(); save(); render(); break;
+    case 'remove-member-cancel': state.ui.confirmRemove=false; render(); break;
+    case 'invite': { const path=t.dataset.path; const o=get(path); if(o){ o.invite_sent=true; save(); emit('person.invite_sent',{path,email:o.email,notice:'own privacy notice and link; their entries replace what the applicant typed'}); render(); } break; }
+    case 'consultant-toggle': state.ui.consultant=!state.ui.consultant; emit(state.ui.consultant?'consultant.session_started':'consultant.session_ended',{}); render(); renderDrawer(); break;
+    case 'submit': { const E=validators.review(); if(Object.keys(E).length){ state.ui.errors=E; render(); return; } state.progress.completed.push('review'); state.progress.status='submitted'; save(); emit('application.submitted',{crm:crmView(),application_ref:state.progress.application_id,conversion:conversion('application_submitted'),note:'Full record stays in the application store.'}); hideNudge(); go('done'); break; }
+    case 'send-confirm': state.progress.status='awaiting_confirmation'; save(); emit('application.sent_for_confirmation',{crm:crmView(),application_ref:state.progress.application_id,audit_entries:state.progress.audit.length}); hideNudge(); go('done'); break;
     case 'help': hideNudge(); openHelp('menu'); break;
     case 'help-book': openHelp('book'); break;
     case 'help-close': case 'help-close-scrim': closeHelp(); break;
     case 'help-view': openHelp(t.dataset.view); break;
     case 'pick-day': helpDay=t.dataset.day; renderOverlay(); break;
-    case 'pick-slot': { const d=new Date(helpDay+'T00:00:00'); state.booking={date:helpDay,time:t.dataset.time,label:fmtDate(d)+' at '+t.dataset.time,type:'specialist_call_30m'}; renderOverlay(); break; }
+    case 'pick-slot': { const day=businessDays(10).find(x=>x.key===helpDay); state.booking={date:helpDay,time:t.dataset.time,iso:t.dataset.iso,timezone:MEL,local_label:t.dataset.local||null,label:fmtDate(day)+' at '+t.dataset.time,type:'specialist_call_30m'}; renderOverlay(); break; }
     case 'confirm-book': if(state.booking){ if(state.progress.status==='submitted'){ emit('booking.created',{booking:state.booking,post_submission:true}); closeHelp(); save(); render(); } else finishHandoff('booked',{booking:state.booking}); } break;
     case 'confirm-callback': finishHandoff('callback',{preferred_time:state.banking.contact_time,mobile:state.lead.mobile}); break;
     case 'confirm-link': finishHandoff('saved',{resume_link_sent_to:state.lead.email}); break;
@@ -889,7 +993,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(state.ui.helpV
 function start(){
   load(); captureSource(); loadCopy();
   try{ const b=localStorage.getItem(BRAND_KEY); if(b&&THEMES.some(t=>t.key===b)) applyBrand(b); else renderThemeBar(); }catch(e){ renderThemeBar(); }
-  if(state.progress.step!=='landing'&&state.progress.step!=='done'&&state.progress.step!=='handoff') state.progress.step='landing';
+  if(!['landing','done','handoff'].includes(state.progress.step)) state.progress.step='landing';
   if(state.progress.status==='abandoned') emit('session.returned',{via:'direct',nurture:'paused'});
   render();
 }

@@ -17,14 +17,15 @@ Open `index.html` in any browser. It is one self-contained file: no build step, 
 ## Screens
 
 1. **Landing.** Headline, two calls to action, the trust section (video slot, who and why, trust signals), what you'll need, and a comparison of individual vs corporate trustees. Shows a "welcome back" banner if there is saved progress.
-2. **Contact + Get started.** Name, email, mobile, and an optional marketing tick. A disclaimer sits above the Get started button: pressing it is consent to save progress and be contacted if they stop. The disclaimer text, version and timestamp are stored on the lead. This creates the lead.
-3. **Fund.** Fund name, trustee structure, member count (1–6), existing super, balance range, timeframe. Inline notes explain the single-member rules for each structure. All optional.
-4. **Trustee.** Branches on structure, or offers the structure choice again if none was picked. Individual: second trustee's full name, date of birth, contact details, relationship, and residential address when the fund has one member. Corporate: new or existing company, company name or ACN, registered office, shareholders of a new company (defaults to members in equal shares), confirmation that members are directors.
-5. **Members.** One card per member, prefilled from earlier answers. First, middle and last names, date of birth, address, contact details, tax residency, employer contributions, rollover funds with member numbers. With a corporate trustee: Director ID (15 digits starting 036) and, for a new company, place of birth. No TFN, no ID upload.
-6. **Banking and contact.** IdealX cash account or own bank, primary contact, adviser involvement, best way and time to reach them.
-7. **Review.** Full summary with edit links and three declarations. Submit.
-8. **Confirmation.** Reference number and the next steps (secure account invite, deed, ATO registration, rollovers). Optional booking.
-9. **Hand-off confirmation.** Shown after a tap-out: what was booked or sent, and which sections are complete.
+2. **Contact + Get started.** Name, email, mobile, and an optional marketing tick. A disclaimer sits above the Get started button: pressing it is consent to save progress and be contacted if they stop, and names STOP and unsubscribe. The disclaimer text, version and timestamp are stored on the lead.
+3. **Mobile code.** A six-digit code is sent to the mobile and must be entered before the lead exists or any message is sent. The same check guards resume links. The prototype accepts any six digits.
+4. **Fund.** General advice warning. Fund name, trustee structure, member count (1–6), existing super, balance range, timeframe. Inline notes explain the single-member rules for each structure. All optional.
+5. **Trustee.** Branches on structure, or offers the structure choice again if none was picked. Individual: second trustee's full name, date of birth, contact details, relationship, and residential address when the fund has one member. Corporate: new or existing company, company name or ACN, registered office, shareholders of a new company (defaults to members in equal shares), confirmation that members are directors.
+6. **Members.** One card per member, prefilled from earlier answers. First, middle and last names, date of birth, address, contact details, tax residency, employer contributions, rollover funds with member numbers. With a corporate trustee: Director ID (15 digits starting 036) and, for a new company, place of birth. No TFN, no ID upload.
+7. **Banking and contact.** IdealX cash account or own bank, primary contact, adviser involvement, best way and time to reach them.
+8. **Review.** Full summary with edit links and three declarations. Submit.
+9. **Confirmation.** Reference number and the next steps (secure account invite, deed, ATO registration, rollovers). Optional booking.
+10. **Hand-off confirmation.** Shown after a tap-out: what was booked or sent, and which sections are complete.
 
 ## Brand theme switcher
 
@@ -76,35 +77,48 @@ The prototype stores state in the browser only. In production each event is a `P
 |---|---|---|
 | `lead.created` | Get started pressed on the contact screen | Create lead with source (UTM, gclid, fbclid) and intent (self / assisted) |
 | `step.completed` | Any form section completed | Update progress on the lead |
+| `otp.sent` / `otp.verified` | Mobile code sent and entered | Lead is created only after verification |
 | `nudge.shown` | 45 s idle on a form step | Reporting only |
-| `session.abandoned` | Tab hidden, page closed, or demo button | Set status `abandoned`, start nurture sequence |
+| `session.left` | Tab hidden or page closed | Start a 30-minute timer; returning cancels it |
+| `session.abandoned` | 30 minutes without return (or the demo button) | Set status `abandoned`, start nurture sequence |
+| `person.invite_sent` | Applicant invites a named person to fill their own card | Send that person their own link and privacy notice |
+| `application.sent_for_confirmation` | Consultant mode: consultant finishes the form | Email the applicant a confirm-and-declare link; nothing drafted until confirmed |
 | `session.resumed` / `session.returned` | They come back | Pause nurture |
 | `progress.saved` | "Email me a link" | Send resume link; SMS check-in after 24 h |
 | `callback.requested` | "Call me when someone's free" | Create a call task now, with preferred time |
 | `booking.created` | Slot confirmed | Create calendar event + call task; confirmation email and SMS; reminder 1 h before |
 | `partial.submitted` | Any of the three tap-outs | Attach the partial record to the lead for the caller |
-| `application.submitted` | Review submitted | Create the application in the onboarding system; send confirmation; invite members to the secure account |
+| `application.submitted` | Review submitted | Create the application in the onboarding system; send confirmation; invite members to the secure account; upload the click IDs as an offline conversion |
 
-Status values: `new`, `in_progress`, `saved`, `callback`, `booked`, `abandoned`, `submitted`.
+CRM payloads carry contact details, status, campaign source, progress, routing tier and the application reference only. Dates of birth, addresses, director IDs and places of birth stay in the application store and are never sent to the marketing CRM.
+
+Status values: `new`, `in_progress`, `saved`, `callback`, `booked`, `abandoned`, `awaiting_confirmation`, `submitted`. Routing tiers from balance and timeframe: `priority`, `standard`, `explore`, `unknown`.
 
 ### Nurture sequence (after `session.abandoned`)
 
+Abandonment is confirmed only after 30 minutes without return; returning cancels queued messages.
+
 | When | Channel | Goal |
 |---|---|---|
-| T+10 min | SMS with resume link | Resume |
-| T+1 hour | Email: what's done, what's left, resume link, booking link | Resume or book |
-| T+1 business day | Call 1 (task with the saved record attached) | Finish over the phone |
-| T+3 days | Email: individual vs corporate trustee explainer | Resume |
-| T+7 days | Call 2; voicemail offers booking link | Book |
-| T+14 days | Last-chance email from a named specialist | Book |
-| T+30 days | Stop; monthly newsletter if marketing consent given | |
+| Confirmed | SMS with resume link (asks for a mobile code) | Resume |
+| +1 hour | Email: what's done, what's left, resume and booking links | Resume or book |
+| +1 business day | Call 1 (consultant completes the form, then sends a confirm-and-declare link) | Finish over the phone |
+| +3 days | Email: individual vs corporate trustee explainer | Resume |
+| +7 days | Call 2; voicemail offers booking link | Book |
+| +14 days | Last-chance email from a named consultant | Book |
+| +30 days | Stop; newsletter only with marketing consent; record deleted after 90 days if not converted | |
 
-Stops on submit, booking, completed callback, opt-out, or three unanswered calls.
+Stops on submit, booking, completed callback, STOP or unsubscribe, or three unanswered calls. Calls are washed against the Do Not Call Register and made only in permitted hours.
+
+## Launch checklist and hazards
+
+The Board notes drawer has a **Launch checklist** tab listing the policy and production items that must be settled before ad spend starts: advice boundary and consultant scripts, ad platform verification, calling rules, bot protection, keeping sensitive fields out of the CRM, pixel placement, retention, duplicates, speed to lead, qualification policy, a real calendar, minors, deed provider mapping, accessibility, offline conversions and field-level analytics. The full hazards table with mitigations and status is in the SMSF Start Information Flow doc.
 
 ## Deliberately out of scope on this page
 
 - Tax file numbers and identity documents. These are collected inside the secure IdealX account after hand-off, which keeps the ad landing page low-risk.
 - Payment. Fees are explained on the call or in onboarding.
+- Members under 18. Out of scope for launch.
 - Trust deed, ATO registration and bank account opening. These start after submission.
 
 ## Path to production
