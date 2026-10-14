@@ -6,50 +6,51 @@
 <title>IdealX SMSF Start</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap">
 <style>
-/* Layout: one narrow column of form steps on a matte-black ground, indigo as the only accent, a board-notes drawer docking on the right at desktop width. */
+/* Layout: one narrow column of form steps on the website's white page, ink text, indigo as the single accent, a board-notes drawer docking on the right at desktop width. */
+/* Tokens read from idealx.com's stylesheet (:root --indigo, --ink, --slate, --mist, --cloud, --indigo-tint, --radius). Values marked "derived" are not on the site and were built from those. */
 :root{
-  --bg:#0c0c10; --surface:#15151b; --surface-2:#1d1d26; --fg:#f1f0ec; --muted:#9b9ba9;
-  --line:#2a2a35; --line-strong:#3b3b49;
-  --accent:#6366f1; --accent-strong:#8183f7; --accent-soft:rgba(99,102,241,.16); --on-accent:#ffffff;
-  --good:#3ccf91; --good-soft:rgba(60,207,145,.14); --warn:#e8b54d; --warn-soft:rgba(232,181,77,.14); --bad:#ef6b6b; --bad-soft:rgba(239,107,107,.14);
-  --display:'Fraunces',Georgia,'Times New Roman',serif;
-  --body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --radius:8px; --shadow:0 20px 60px rgba(0,0,0,.5);
-  color-scheme:dark;
-}
-@media (prefers-color-scheme: light){
-  :root:not([data-theme="dark"]){
-    --bg:#f3f3f6; --surface:#ffffff; --surface-2:#ebebf1; --fg:#131318; --muted:#5d5d6c;
-    --line:#dadae3; --line-strong:#c2c2cd;
-    --accent:#4b4ed8; --accent-strong:#3a3dc4; --accent-soft:rgba(75,78,216,.10); --on-accent:#ffffff;
-    --good:#1f9f68; --good-soft:rgba(31,159,104,.12); --warn:#b7831a; --warn-soft:rgba(183,131,26,.12); --bad:#cf4444; --bad-soft:rgba(207,68,68,.10);
-    --shadow:0 20px 60px rgba(20,20,40,.18);
-    color-scheme:light;
-  }
-}
-:root[data-theme="light"]{
-  --bg:#f3f3f6; --surface:#ffffff; --surface-2:#ebebf1; --fg:#131318; --muted:#5d5d6c;
-  --line:#dadae3; --line-strong:#c2c2cd;
-  --accent:#4b4ed8; --accent-strong:#3a3dc4; --accent-soft:rgba(75,78,216,.10); --on-accent:#ffffff;
-  --good:#1f9f68; --good-soft:rgba(31,159,104,.12); --warn:#b7831a; --warn-soft:rgba(183,131,26,.12); --bad:#cf4444; --bad-soft:rgba(207,68,68,.10);
-  --shadow:0 20px 60px rgba(20,20,40,.18);
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#f0f0f0; --fg:#0d0d0f; --muted:#5b5b63;
+  --line:#e7e7ea; --line-strong:#0d0d0f33;
+  --accent:#5158f6; --accent-strong:#3f46e0; --accent-soft:#eeeffe; --on-accent:#ffffff;
+  --good:#1f7a45; --good-soft:#e6f3ea; --warn:#8a5300; --warn-soft:#fbf1de; --bad:#b4232a; --bad-soft:#fbe9ea;
+  --display:'Instrument Serif',Georgia,'Times New Roman',serif;
+  --body:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --radius:10px; --radius-lg:14px; --radius-xl:24px; --shadow:0 20px 60px rgba(13,13,15,.18);
   color-scheme:light;
 }
-/* Brand theme candidates for board review. Each commits to one look and overrides the viewer's light/dark choice. */
-:root[data-brand="teal"]{--bg:#0a0e10;--surface:#12181b;--surface-2:#182125;--fg:#eef3f2;--muted:#93a3a3;--line:#243034;--line-strong:#34454c;--accent:#2dd4bf;--accent-strong:#5eead4;--accent-soft:rgba(45,212,191,.14);--on-accent:#06201c;--good:#4ade80;--good-soft:rgba(74,222,128,.14);--warn:#fbbf24;--warn-soft:rgba(251,191,36,.14);--bad:#f87171;--bad-soft:rgba(248,113,113,.14);--shadow:0 20px 60px rgba(0,0,0,.5);color-scheme:dark}
-:root[data-brand="ivory"]{--bg:#f5f3ee;--surface:#fffdf9;--surface-2:#edeae2;--fg:#15151c;--muted:#5f5e6a;--line:#dfdbd1;--line-strong:#c7c2b5;--accent:#3b3ccc;--accent-strong:#2f30b3;--accent-soft:rgba(59,60,204,.10);--on-accent:#ffffff;--good:#1f9f68;--good-soft:rgba(31,159,104,.12);--warn:#b7831a;--warn-soft:rgba(183,131,26,.12);--bad:#cf4444;--bad-soft:rgba(207,68,68,.10);--shadow:0 20px 60px rgba(40,30,10,.16);color-scheme:light}
-:root[data-brand="slate"]{--bg:#0f1420;--surface:#161c2b;--surface-2:#1d2436;--fg:#eef0f6;--muted:#98a0b5;--line:#28314a;--line-strong:#39435f;--accent:#d4a84b;--accent-strong:#e6bd63;--accent-soft:rgba(212,168,75,.14);--on-accent:#17120a;--good:#4ade80;--good-soft:rgba(74,222,128,.14);--warn:#fbbf24;--warn-soft:rgba(251,191,36,.14);--bad:#f87171;--bad-soft:rgba(248,113,113,.14);--shadow:0 20px 60px rgba(0,0,0,.5);color-scheme:dark}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]):not([data-brand]){
+    --bg:#0d0d0f; --surface:#16161a; --surface-2:#1e1e23; --fg:#ffffff; --muted:#a3a3aa;
+    --line:#ffffff24; --line-strong:#ffffff47;
+    --accent:#5158f6; --accent-strong:#8b90f9; --accent-soft:rgba(81,88,246,.25); --on-accent:#ffffff;
+    --good:#4cc47f; --good-soft:rgba(76,196,127,.16); --warn:#e0a63f; --warn-soft:rgba(224,166,63,.16); --bad:#ef6b6b; --bad-soft:rgba(239,107,107,.16);
+    --shadow:0 20px 60px rgba(0,0,0,.55);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]:not([data-brand]),:root[data-brand="dark"]{
+  --bg:#0d0d0f; --surface:#16161a; --surface-2:#1e1e23; --fg:#ffffff; --muted:#a3a3aa;
+  --line:#ffffff24; --line-strong:#ffffff47;
+  --accent:#5158f6; --accent-strong:#8b90f9; --accent-soft:rgba(81,88,246,.25); --on-accent:#ffffff;
+  --good:#4cc47f; --good-soft:rgba(76,196,127,.16); --warn:#e0a63f; --warn-soft:rgba(224,166,63,.16); --bad:#ef6b6b; --bad-soft:rgba(239,107,107,.16);
+  --shadow:0 20px 60px rgba(0,0,0,.55);
+  color-scheme:dark;
+}
+/* Board review options. "light" pins the website look; "tint" and "cloud" are derived variants that only use site colours. */
+:root[data-brand="light"]{--bg:#ffffff;--surface:#ffffff;--surface-2:#f0f0f0;--fg:#0d0d0f;--muted:#5b5b63;--line:#e7e7ea;--line-strong:#0d0d0f33;--accent:#5158f6;--accent-strong:#3f46e0;--accent-soft:#eeeffe;--on-accent:#ffffff;--good:#1f7a45;--good-soft:#e6f3ea;--warn:#8a5300;--warn-soft:#fbf1de;--bad:#b4232a;--bad-soft:#fbe9ea;--shadow:0 20px 60px rgba(13,13,15,.18);color-scheme:light}
+:root[data-brand="tint"]{--bg:#eeeffe;--surface:#ffffff;--surface-2:#f0f0f0;--fg:#0d0d0f;--muted:#5b5b63;--line:#e7e7ea;--line-strong:#0d0d0f33;--accent:#5158f6;--accent-strong:#3f46e0;--accent-soft:rgba(81,88,246,.16);--on-accent:#ffffff;--good:#1f7a45;--good-soft:#e6f3ea;--warn:#8a5300;--warn-soft:#fbf1de;--bad:#b4232a;--bad-soft:#fbe9ea;--shadow:0 20px 60px rgba(81,88,246,.18);color-scheme:light}
+:root[data-brand="cloud"]{--bg:#f0f0f0;--surface:#ffffff;--surface-2:#e7e7ea;--fg:#0d0d0f;--muted:#5b5b63;--line:#e7e7ea;--line-strong:#0d0d0f33;--accent:#5158f6;--accent-strong:#3f46e0;--accent-soft:#eeeffe;--on-accent:#ffffff;--good:#1f7a45;--good-soft:#e6f3ea;--warn:#8a5300;--warn-soft:#fbf1de;--bad:#b4232a;--bad-soft:#fbe9ea;--shadow:0 20px 60px rgba(13,13,15,.14);color-scheme:light}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
-h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.01em}
-h1{font-size:clamp(2rem,5.5vw,3.4rem);font-variation-settings:'opsz' 96}
-h2{font-size:clamp(1.55rem,3.5vw,2.1rem);font-variation-settings:'opsz' 72}
-h3{font-size:1.2rem;font-variation-settings:'opsz' 36}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.05;margin:0;text-wrap:balance;letter-spacing:-.005em}
+h1{font-size:clamp(2.4rem,6.5vw,4rem)}
+h2{font-size:clamp(1.8rem,4vw,2.5rem)}
+h3{font-size:1.4rem}
 p{margin:0}
 a{color:var(--accent-strong)}
 button{font:inherit;color:inherit;cursor:pointer}
@@ -89,7 +90,7 @@ main{padding-block:28px 96px;padding-left:max(16px,env(safe-area-inset-left,0px)
 .stack{display:grid;gap:16px}
 .stack.tight{gap:10px}
 .lede{font-size:1.1rem;color:var(--muted);max-width:60ch}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:20px}
 .card.quiet{background:transparent}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .row > *{min-width:0}
@@ -105,7 +106,7 @@ hr{border:0;border-top:1px solid var(--line);margin:0}
 .points{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .point{border-top:1px solid var(--line-strong);padding-top:14px;display:grid;gap:6px}
 .point b{font-weight:600}
-.resume{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:16px 18px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.resume{background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius-lg);padding:16px 18px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
 .compare{width:100%;border-collapse:collapse;font-size:.9rem}
 .compare th,.compare td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 .compare th{color:var(--muted);font-weight:500;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
@@ -124,23 +125,23 @@ input,select,textarea{width:100%;min-height:46px;padding:10px 12px;border-radius
 textarea{min-height:90px;resize:vertical}
 input::placeholder{color:var(--muted)}
 select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}
-.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;border:1px solid transparent;border-radius:12px}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;border:1px solid transparent;border-radius:var(--radius-lg)}
 .choices.inline{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
-.choice{position:relative;display:grid;gap:4px;padding:14px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface);cursor:pointer}
+.choice{position:relative;display:grid;gap:4px;padding:14px;border:1px solid var(--line-strong);border-radius:var(--radius-lg);background:var(--surface);cursor:pointer}
 .choice input{position:absolute;opacity:0;width:1px;height:1px;min-height:0}
 .choice b{font-weight:600}
 .choice span{font-size:.85rem;color:var(--muted)}
 .choice:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
 .choice:has(input:checked) b::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle}
-.check{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface);cursor:pointer}
+.check{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line-strong);border-radius:var(--radius-lg);background:var(--surface);cursor:pointer}
 .check input{width:20px;height:20px;min-height:0;margin:2px 0 0;flex:none;accent-color:var(--accent)}
 .check.has-err{border-color:var(--bad)}
 .check .err{display:none}
 .check.has-err .err{display:block;font-size:.8rem;color:var(--bad)}
-.disclaimer{display:grid;gap:8px;padding:14px 16px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);font-size:.92rem;line-height:1.5}
+.disclaimer{display:grid;gap:8px;padding:14px 16px;border-radius:var(--radius-lg);background:var(--surface-2);border:1px solid var(--line);font-size:.92rem;line-height:1.5}
 .disclaimer b{font-weight:600}
 .section-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.member{border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px;background:var(--surface)}
+.member{border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px;display:grid;gap:14px;background:var(--surface)}
 .member .mh{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;letter-spacing:.04em;padding:4px 10px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);text-transform:uppercase}
 .pill.accent{color:var(--accent-strong);border-color:var(--accent)}
@@ -149,7 +150,7 @@ select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(
 .pill.bad{color:var(--bad);border-color:var(--bad)}
 .note{border-left:3px solid var(--accent);padding:10px 14px;background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:.9rem}
 .note.warn{border-color:var(--warn);background:var(--warn-soft)}
-details{border:1px solid var(--line);border-radius:12px;padding:0 16px}
+details{border:1px solid var(--line);border-radius:var(--radius-lg);padding:0 16px}
 details summary{cursor:pointer;padding:14px 0;font-weight:500;list-style:none;display:flex;justify-content:space-between;align-items:center}
 details summary::after{content:'+';color:var(--muted);font-size:1.2rem}
 details[open] summary::after{content:'–'}
@@ -167,10 +168,10 @@ ol.next{margin:0;padding-left:20px;display:grid;gap:8px}
 /* Sheet (save & get help) */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40;display:flex;align-items:flex-end;justify-content:center}
 @media (min-width:640px){.scrim{align-items:center}}
-.sheet{background:var(--surface);border:1px solid var(--line-strong);border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:grid;gap:18px;box-shadow:var(--shadow)}
-@media (min-width:640px){.sheet{border-radius:16px;padding-left:24px;padding-right:24px}}
+.sheet{background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:grid;gap:18px;box-shadow:var(--shadow)}
+@media (min-width:640px){.sheet{border-radius:var(--radius-xl);padding-left:24px;padding-right:24px}}
 .sheet .sh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.opt{display:grid;gap:4px;text-align:left;padding:16px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface-2);width:100%}
+.opt{display:grid;gap:4px;text-align:left;padding:16px;border:1px solid var(--line-strong);border-radius:var(--radius-lg);background:var(--surface-2);width:100%}
 .opt:hover{border-color:var(--accent)}
 .opt b{font-weight:600}
 .opt span{font-size:.875rem;color:var(--muted)}
@@ -199,7 +200,7 @@ ol.next{margin:0;padding-left:20px;display:grid;gap:8px}
 .trust{display:grid;gap:24px}
 .trust-grid{display:grid;grid-template-columns:1fr;gap:24px}
 @media (min-width:860px){.trust-grid{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}}
-.video{aspect-ratio:16/9;width:100%;max-width:100%;min-width:0;border:1px dashed var(--line-strong);border-radius:12px;background:var(--surface);display:grid;place-items:center;text-align:center;padding:20px;gap:10px;align-content:center}
+.video{aspect-ratio:16/9;width:100%;max-width:100%;min-width:0;border:1px dashed var(--line-strong);border-radius:var(--radius-lg);background:var(--surface);display:grid;place-items:center;text-align:center;padding:20px;gap:10px;align-content:center}
 .video .play{width:64px;height:64px;border-radius:50%;border:2px solid var(--accent);display:grid;place-items:center;color:var(--accent-strong);margin:0 auto 6px}
 .video .play::after{content:'';display:block;width:0;height:0;border-left:18px solid currentColor;border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:4px}
 .video b{font-weight:600}
@@ -219,7 +220,7 @@ ol.next{margin:0;padding-left:20px;display:grid;gap:8px}
 .edit-hint .pill{text-transform:none;letter-spacing:0}
 
 /* Nudge toast */
-.nudge{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:35;margin:0 auto;max-width:520px;background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow)}
+.nudge{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:35;margin:0 auto;max-width:520px;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius-lg);padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow)}
 .nudge p{flex:1;min-width:0;font-size:.9rem}
 
 /* Board notes drawer */
@@ -290,14 +291,14 @@ const NURTURE = [
 
 /* ---------- brand themes (board review) ---------- */
 const THEMES=[
-  {key:'matte',name:'Matte Indigo',desc:'The website as it is: matte black ground, indigo as the single accent. Follows the viewer\'s light or dark setting.',sw:['#0c0c10','#6366f1'],hex:{ground:'#0c0c10',surface:'#15151b',text:'#f1f0ec',muted:'#9b9ba9',accent:'#6366f1'}},
-  {key:'teal',name:'Obsidian Teal',desc:'Same black ground, accent shifted to teal to read as "live data" and fintech rather than legal.',sw:['#0a0e10','#2dd4bf'],hex:{ground:'#0a0e10',surface:'#12181b',text:'#eef3f2',muted:'#93a3a3',accent:'#2dd4bf'}},
-  {key:'ivory',name:'Ivory Indigo',desc:'Light paper ground with deep indigo. Reads as private-bank calm; the safest choice for an older audience.',sw:['#f5f3ee','#3b3ccc'],hex:{ground:'#f5f3ee',surface:'#fffdf9',text:'#15151c',muted:'#5f5e6a',accent:'#3b3ccc'}},
-  {key:'slate',name:'Slate Gold',desc:'Deep slate blue ground with a warm gold accent. Wealth cues without leaving the dark family.',sw:['#0f1420','#d4a84b'],hex:{ground:'#0f1420',surface:'#161c2b',text:'#eef0f6',muted:'#98a0b5',accent:'#d4a84b'}}
+  {key:'light',name:'IdealX Light',src:'website',desc:'The website exactly: white page, ink text, indigo accent, Inter and Instrument Serif.',sw:['#ffffff','#5158f6'],hex:{page:'#ffffff',cloud:'#f0f0f0',ink:'#0d0d0f',slate:'#5b5b63',mist:'#e7e7ea',indigo:'#5158f6','indigo-600':'#3f46e0','indigo-tint':'#eeeffe'}},
+  {key:'dark',name:'IdealX Dark',src:'derived',desc:'The same palette inverted: ink page, ink-2 surfaces, white text, indigo unchanged. Lines and muted text are white at site opacities.',sw:['#0d0d0f','#5158f6'],hex:{page:'#0d0d0f','ink-2':'#16161a',text:'#ffffff',muted:'#a3a3aa (derived)',line:'rgba(255,255,255,.14)',indigo:'#5158f6','indigo-light':'#8b90f9 (derived)'}},
+  {key:'tint',name:'Indigo Tint',src:'derived',desc:'Page on the site\'s indigo-tint with white cards. Softer than plain white, still the same ink and indigo.',sw:['#eeeffe','#5158f6'],hex:{page:'#eeeffe (indigo-tint)',surface:'#ffffff',ink:'#0d0d0f',slate:'#5b5b63',indigo:'#5158f6'}},
+  {key:'cloud',name:'Cloud',src:'derived',desc:'Page on the site\'s cloud grey with white cards, so forms and tiles stand off the ground more.',sw:['#f0f0f0','#5158f6'],hex:{page:'#f0f0f0 (cloud)',surface:'#ffffff',ink:'#0d0d0f',slate:'#5b5b63',mist:'#e7e7ea',indigo:'#5158f6'}}
 ];
 const BRAND_KEY='idealx.brand', COPY_KEY='idealx.copy';
-function currentBrand(){ return document.documentElement.dataset.brand||'matte'; }
-function applyBrand(k){ if(k==='matte') delete document.documentElement.dataset.brand; else document.documentElement.dataset.brand=k; try{ localStorage.setItem(BRAND_KEY,k); }catch(e){} renderThemeBar(); if(drawerOpen) renderDrawer(); }
+function currentBrand(){ const b=document.documentElement.dataset.brand; if(b) return b; try{ return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'; }catch(e){ return 'light'; } }
+function applyBrand(k){ document.documentElement.dataset.brand=k; try{ localStorage.setItem(BRAND_KEY,k); }catch(e){} renderThemeBar(); if(drawerOpen) renderDrawer(); }
 function renderThemeBar(){ const k=currentBrand(); const t=THEMES.find(x=>x.key===k)||THEMES[0];
   document.getElementById('themeBtns').innerHTML=THEMES.map(x=>`<button class="tbtn ${x.key===k?'on':''}" data-brand="${x.key}" aria-pressed="${x.key===k}"><span class="sw"><i style="background:${x.sw[0]}"></i><i style="background:${x.sw[1]}"></i></span>${x.name}</button>`).join(' ');
   document.getElementById('themeDesc').textContent=t.desc; }
@@ -708,10 +709,10 @@ function renderDrawer(){
     <div class="small muted">Example data is marked as such in the record and is never a real person.</div>`;
   } else if(tab==='theme'){
     const k=currentBrand();
-    body=`<div class="small muted">Four palettes derived from idealx.com (matte black objects, indigo accents, plain copy). Pick one in the bar at the top; the whole prototype re-skins. Values below are the base tokens for a brand guide.</div>
-    ${THEMES.map(t=>`<div class="journey" style="border-color:${t.key===k?'var(--accent)':'var(--line)'}"><div class="row" style="justify-content:space-between"><b>${t.name}</b>${t.key===k?'<span class="pill accent">selected</span>':`<button class="btn sm ghost" data-brand-pick="${t.key}">Preview</button>`}</div><div class="small muted">${t.desc}</div>
+    body=`<div class="small muted">Colour tokens and fonts were read from idealx.com\'s stylesheet on 14 October 2026. <b>IdealX Light</b> is the site as published. The other three only use site colours; values marked derived are new. Pick one in the bar at the top and the whole prototype re-skins.</div>
+    ${THEMES.map(t=>`<div class="journey" style="border-color:${t.key===k?'var(--accent)':'var(--line)'}"><div class="row" style="justify-content:space-between"><b>${t.name} <span class="pill" style="margin-left:6px">${t.src}</span></b>${t.key===k?'<span class="pill accent">selected</span>':`<button class="btn sm ghost" data-brand-pick="${t.key}">Preview</button>`}</div><div class="small muted">${t.desc}</div>
     <div class="row">${Object.entries(t.hex).map(([n,h])=>`<span class="row" style="gap:6px"><span class="sw" style="width:16px;height:16px"><i style="background:${h}"></i></span><span class="mono small">${n} ${h}</span></span>`).join('')}</div></div>`).join('')}
-    <div class="small muted">Type stays constant across themes: Fraunces for headings, Instrument Sans for everything else, JetBrains Mono for data. Say the word and I can add type variants too.</div>
+    <div class="small muted">Type matches the site in every theme: Instrument Serif for headings, Inter for everything else, the system monospace for data.</div>
     <div class="row"><button class="btn sm ghost" data-act="reset-copy">Reset trust-section copy</button><span class="small muted">Copy edits live in this browser only.</span></div>`;
   } else if(tab==='events'){
     body=`<div class="f"><label for="f-webhook">Webhook URL <span class="muted">(optional)</span></label><input id="f-webhook" data-bind="ui.webhook" value="${esc(state.ui.webhook)}" placeholder="https://example.com/hooks/smsf-start"><div class="hint">Every event below is POSTed here as JSON when set. Leave blank for the demo.</div></div>

@@ -28,14 +28,16 @@ Open `index.html` in any browser. It is one self-contained file: no build step, 
 
 ## Brand theme switcher
 
-A bar at the top lets reviewers switch the whole prototype between four palettes derived from idealx.com. The choice is remembered in the browser. The **Theme** tab in Board notes lists each palette's base tokens for a brand guide.
+Colour tokens and fonts were read from idealx.com's stylesheet (its `:root` custom properties) on 14 October 2026. Type in every theme matches the site: Instrument Serif for headings, Inter for body, the system monospace for data. Radii are the site's 10 / 14 / 24px.
 
-| Theme | Ground | Accent | Reads as |
-|---|---|---|---|
-| Matte Indigo | `#0c0c10` | `#6366f1` | The website as it is; follows the viewer's light/dark setting |
-| Obsidian Teal | `#0a0e10` | `#2dd4bf` | Live data, fintech |
-| Ivory Indigo | `#f5f3ee` | `#3b3ccc` | Private-bank calm, safest for an older audience |
-| Slate Gold | `#0f1420` | `#d4a84b` | Wealth cues inside the dark family |
+A bar at the top lets reviewers switch the whole prototype between four palettes; the choice is remembered in the browser. With no choice made, the page follows the viewer's light or dark setting. The **Theme** tab in Board notes lists each palette's tokens.
+
+| Theme | Source | Page | Accent | Notes |
+|---|---|---|---|---|
+| IdealX Light | website | `#ffffff` | `#5158f6` | The site as published: white, ink `#0d0d0f`, slate `#5b5b63`, mist `#e7e7ea`, cloud `#f0f0f0`, indigo-tint `#eeeffe` |
+| IdealX Dark | derived | `#0d0d0f` | `#5158f6` | Ink page, ink-2 `#16161a` surfaces, white text; lines use the site's white-at-14% |
+| Indigo Tint | derived | `#eeeffe` | `#5158f6` | Site's indigo-tint as the page, white cards |
+| Cloud | derived | `#f0f0f0` | `#5158f6` | Site's cloud grey as the page, white cards |
 
 ## Trust section (above the form)
 
