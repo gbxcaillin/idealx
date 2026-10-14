@@ -225,8 +225,9 @@ ol.next{margin:0;padding-left:20px;display:grid;gap:8px}
 .info:hover,.info:focus-visible,.lr.open .info{border-color:var(--accent);color:var(--accent-strong)}
 .tip{display:none;position:absolute;top:100%;left:0;margin-top:6px;z-index:6;width:min(360px,100%);background:var(--fg);color:var(--bg);font-size:.8rem;line-height:1.45;padding:10px 12px;border-radius:var(--radius);box-shadow:var(--shadow);font-weight:400;text-transform:none;letter-spacing:0}
 .info:hover + .tip,.info:focus-visible + .tip,.lr.open .tip{display:block}
-.check .lr{display:inline-flex}
-.check .tip{left:auto;right:0}
+.check{position:relative}
+.check .lr{display:inline-flex;position:static}
+.check .tip{left:12px;right:12px;width:auto;top:100%;margin-top:-6px}
 .req{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-strong);font-weight:600}
 .optnote{font-size:.9rem;color:var(--muted)}
 
