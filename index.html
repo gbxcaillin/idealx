@@ -326,7 +326,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.closest&&e
 const fresh = () => ({
   lead:{id:null,first:'',last:'',email:'',mobile:'',consent_contact:false,consent:null,consent_marketing:false,intent:'self',source:{},created_at:null},
   fund:{name:'',structure:'',member_count:'2',rollover:'',balance:'',timeline:''},
-  trustee:{second:{first:'',last:'',dob:'',email:'',mobile:'',relationship:''},company_mode:'',company_name:'',acn:'',office_same:'yes',office:{street:'',suburb:'',state:'',postcode:''},directors_confirmed:false},
+  trustee:{second:{first:'',middle:'',last:'',dob:'',email:'',mobile:'',relationship:'',addr:{street:'',suburb:'',state:'',postcode:''}},company_mode:'',company_name:'',acn:'',office_same:'yes',office:{street:'',suburb:'',state:'',postcode:''},shareholders:'members',shareholders_other:'',directors_confirmed:false},
   members:[],
   banking:{cash_account:'idealx',primary_contact:'0',adviser:'no',adviser_name:'',adviser_firm:'',contact_method:'phone',contact_time:'morning'},
   review:{decl_trustee:false,decl_accurate:false,decl_advice:false},
@@ -344,7 +344,7 @@ const get = p => p.split('.').reduce((o,k)=>o==null?undefined:o[k], state);
 function set(p,v){const ks=p.split('.');let o=state;for(let i=0;i<ks.length-1;i++){if(o[ks[i]]==null)o[ks[i]]=/^\d+$/.test(ks[i+1])?[]:{};o=o[ks[i]];}o[ks[ks.length-1]]=v;}
 const uid = (pfx) => pfx + '_' + Math.random().toString(36).slice(2,10);
 const idFor = p => 'f-' + p.replace(/[^a-z0-9]+/gi,'-');
-const fullName = o => [o.first,o.last].filter(Boolean).join(' ');
+const fullName = o => [o.first,o.middle,o.last].filter(Boolean).join(' ');
 const nowIso = () => new Date().toISOString();
 
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify({state,events})); }catch(e){} }
@@ -380,6 +380,13 @@ const WHY={
   'fund.rollover':'Tells us whether to prepare rollover requests to your existing funds once the SMSF has its ABN.',
   'fund.balance':'Helps a consultant talk through whether an SMSF is cost-effective for you and which cash account fits. General information only, not advice.',
   'fund.timeline':'Sets how we prioritise your file and when we lodge the ATO registration.',
+  'trustee.second.middle':'The deed and the ATO identity check use full legal names. Include every middle name exactly as it appears on ID.',
+  'trustee.second.addr.street':'A trustee who is not a member is not covered by the member cards, and the deed must state every trustee\'s residential address.',
+  'trustee.shareholders':'ASIC needs the shareholders of a new company at registration. For a trustee company the members usually hold the shares equally.',
+  'members.*.middle':'The deed and the ATO identity check use full legal names. Include every middle name exactly as it appears on ID.',
+  'members.*.director_id':'Every director must hold a Director Identification Number before being appointed. Without it the company cannot be registered.',
+  'members.*.birthplace':'ASIC requires each director\'s town and country of birth when registering a new company. Not needed for an existing company.',
+  'members.*.rollover_member_no':'Your member number with the existing fund lets us lodge the rollover request without a follow-up call.',
   'trustee.second.first':'Every trustee is named on the trust deed and must pass an identity check with the ATO.',
   'trustee.second.last':'Every trustee is named on the trust deed and must pass an identity check with the ATO.',
   'trustee.second.dob':'Trustees must be 18 or over. The ATO verifies each trustee using their date of birth.',
@@ -452,6 +459,7 @@ function formatErrors(pfx,o,E){
   if(o.email&&!isEmail(o.email)) E[pfx+'.email']='That email doesn\'t look right. Fix it or leave it blank.';
   if(o.mobile&&!isMobile(o.mobile)) E[pfx+'.mobile']='Enter an Australian mobile like 0412 345 678, or leave it blank.';
   const a=o.addr||{}; if(a.postcode&&!/^\d{4}$/.test(a.postcode)) E[pfx+'.addr.postcode']='Postcodes are 4 digits. Fix it or leave it blank.';
+  const did=(o.director_id||'').replace(/\s/g,''); if(did&&!/^036\d{12}$/.test(did)) E[pfx+'.director_id']='A director ID is 15 digits starting with 036. Fix it or leave it blank.';
 }
 const validators = {
   consent(){ const E={}, l=state.lead; if(!l.first) E['lead.first']='Enter your first name.'; if(!l.last) E['lead.last']='Enter your last name.'; if(!isEmail(l.email)) E['lead.email']='Enter a valid email address.'; if(!isMobile(l.mobile)) E['lead.mobile']='Enter an Australian mobile number, e.g. 0412 345 678.'; return E; },
@@ -465,14 +473,14 @@ const validators = {
 };
 
 /* ---------- members sync ---------- */
-function blankMember(){ return {first:'',last:'',dob:'',email:'',mobile:'',addr:{street:'',suburb:'',state:'',postcode:''},resident:'',employer_contrib:'',rollover_funds:'',rollover_balance:''}; }
+function blankMember(){ return {first:'',middle:'',last:'',dob:'',email:'',mobile:'',addr:{street:'',suburb:'',state:'',postcode:''},resident:'',employer_contrib:'',rollover_funds:'',rollover_member_no:'',rollover_balance:'',director_id:'',birthplace:''}; }
 function syncMembers(){
   const n=Math.max(1,Math.min(6,Number(state.fund.member_count)||1));
   while(state.members.length<n) state.members.push(blankMember());
   if(state.members.length>n) state.members.length=n;
   const m0=state.members[0], l=state.lead;
   if(!m0.first&&!m0.last){ m0.first=l.first; m0.last=l.last; m0.email=l.email; m0.mobile=l.mobile; }
-  if(state.fund.structure==='individual'&&n>=2){ const m1=state.members[1], s=state.trustee.second; if(!m1.first&&!m1.last){ Object.assign(m1,{first:s.first,last:s.last,dob:s.dob,email:s.email,mobile:s.mobile}); } }
+  if(state.fund.structure==='individual'&&n>=2){ const m1=state.members[1], s=state.trustee.second; if(!m1.first&&!m1.last){ Object.assign(m1,{first:s.first,middle:s.middle,last:s.last,dob:s.dob,email:s.email,mobile:s.mobile}); } }
 }
 
 /* ---------- navigation ---------- */
@@ -596,9 +604,10 @@ function trusteeStep(){
     ${choices('fund.structure','Trustee structure',[['individual','Individual trustees','Two to six people. Every member is a trustee. Lower set-up cost.'],['corporate','Corporate trustee','A company acts as trustee. Easier when members change or the fund holds property.']],{rerender:true})}`;
   } else if(indiv){
     body=`<div class="stack"><div class="eyebrow">Section 2 of 5</div><h2>Your second trustee</h2><p class="lede">You're trustee one. ${n>=2?'Every member is also a trustee, so tell us about the second member here and the rest in the next step.':'Because the fund has one member, the second trustee is someone who is not a member. They can\'t be your employer unless they are also a relative.'}</p>${OPTNOTE}</div>
-    <div class="grid2">${field('trustee.second.first','First name',{ac:'off'})}${field('trustee.second.last','Last name',{ac:'off'})}</div>
+    <div class="grid3">${field('trustee.second.first','First name',{ac:'off'})}${field('trustee.second.middle','Middle name(s)',{ac:'off'})}${field('trustee.second.last','Last name',{ac:'off'})}</div>
     <div class="grid2">${field('trustee.second.dob','Date of birth',{type:'date'})}${select('trustee.second.relationship','Relationship to you',[['spouse','Spouse or partner'],['family','Family member'],['business','Business partner'],['friend','Friend'],['other','Other']])}</div>
     <div class="grid2">${field('trustee.second.email','Email',{type:'email',im:'email'})}${field('trustee.second.mobile','Mobile',{type:'tel',im:'tel',ph:'04xx xxx xxx'})}</div>
+    ${n===1?address('trustee.second.addr'):''}
     <div class="note">We'll email them to confirm they agree to act as trustee. They complete their own identity check later, inside the secure account.</div>`;
   } else {
     body=`<div class="stack"><div class="eyebrow">Section 2 of 5</div><h2>The trustee company</h2><p class="lede">A special-purpose company whose only job is to act as trustee of this fund.</p>${OPTNOTE}</div>
@@ -606,6 +615,8 @@ function trusteeStep(){
     ${t.company_mode?`<div class="grid2">${field('trustee.company_name',t.company_mode==='new'?'Proposed company name':'Company name',{ph:t.company_mode==='new'?(state.lead.last||'Smith')+' Super Pty Ltd':'',hint:t.company_mode==='new'?'We check availability with ASIC before registering.':''})}${t.company_mode==='existing'?field('trustee.acn','ACN',{im:'numeric',max:11,ph:'123 456 789'}):''}</div>`:''}
     ${t.company_mode==='new'?choices('trustee.office_same','Registered office',[['yes','Use my home address','We take this from your member details.'],['no','A different address','Enter it below.']],{rerender:true}):''}
     ${t.company_mode==='new'&&t.office_same==='no'?address('trustee.office'):''}
+    ${t.company_mode==='new'?choices('trustee.shareholders','Who will own the trustee company?',[['members','The members, in equal shares','The usual arrangement for a special-purpose trustee company.'],['other','Something else','Tell us on the call, or describe it below.']],{rerender:true}):''}
+    ${t.company_mode==='new'&&t.shareholders==='other'?field('trustee.shareholders_other','Describe the shareholding',{ph:'e.g. Priya 60%, Daniel 40%'}):''}
     ${t.company_mode?check('trustee.directors_confirmed',`<b>All ${n===1?'members (that\'s you)':n+' members'} will be ${n===1?'the sole director or a director':'directors'} of the trustee company.</b> I understand a corporate trustee company must act only as trustee of this fund.`):''}`;
   }
   return `<div class="col">${body}${navRow('fund','trustee','members')}</div>`;
@@ -615,12 +626,13 @@ function membersStep(){
   const n=state.members.length;
   const cards=state.members.map((m,i)=>{const p='members.'+i; return `<div class="member">
     <div class="mh"><h3>Member ${i+1}${i===0?' <span class="muted small">(you)</span>':''}</h3>${i===n-1&&n>1?`<button class="btn sm ghost" data-act="remove-member">Remove</button>`:''}</div>
-    <div class="grid2">${field(p+'.first','First name')}${field(p+'.last','Last name')}</div>
+    <div class="grid3">${field(p+'.first','First name')}${field(p+'.middle','Middle name(s)')}${field(p+'.last','Last name')}</div>
     <div class="grid2">${field(p+'.dob','Date of birth',{type:'date'})}${choices(p+'.resident','Australian resident for tax?',[['yes','Yes'],['no','No']],{inline:true})}</div>
     <div class="grid2">${field(p+'.email','Email',{type:'email',im:'email'})}${field(p+'.mobile','Mobile',{type:'tel',im:'tel',ph:'04xx xxx xxx'})}</div>
     ${address(p+'.addr')}
+    ${state.fund.structure==='corporate'?`<div class="grid2">${field(p+'.director_id','Director ID',{im:'numeric',max:19,ph:'036 ...',hint:'15 digits, starts with 036. Apply at abrs.gov.au if they don\'t have one yet.'})}${state.trustee.company_mode!=='existing'?field(p+'.birthplace','Place of birth',{ph:'Town, country'}):''}</div>`:''}
     ${choices(p+'.employer_contrib','Will an employer pay super into the fund?',[['yes','Yes'],['no','No'],['unsure','Not sure']],{inline:true})}
-    ${state.fund.rollover!=='no'?`<div class="grid2">${field(p+'.rollover_funds','Existing super fund(s) to roll in',{ph:'e.g. AustralianSuper, Hostplus'})}${select(p+'.rollover_balance','Approximate balance',BAL)}</div>`:''}
+    ${state.fund.rollover!=='no'?`<div class="grid3">${field(p+'.rollover_funds','Existing super fund(s) to roll in',{ph:'e.g. AustralianSuper, Hostplus'})}${field(p+'.rollover_member_no','Member number(s)',{ph:'If handy'})}${select(p+'.rollover_balance','Approximate balance',BAL)}</div>`:''}
   </div>`;}).join('');
   return `<div class="col">
   <div class="stack"><div class="eyebrow">Section 3 of 5</div><h2>Members</h2><p class="lede">One card per person whose super goes into the fund. ${state.fund.structure==='corporate'?'Each member becomes a director of the trustee company.':state.fund.structure==='individual'?'Each member is also a trustee.':''}</p>${OPTNOTE}</div>
@@ -647,8 +659,8 @@ function reviewStep(){
   const f=state.fund,t=state.trustee,b=state.banking;
   const kv=rows=>`<dl class="kv">${rows.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v||'—')}</dd>`).join('')}</dl>`;
   const structure=f.structure==='individual'?'Individual trustees':'Corporate trustee';
-  const trusteeRows=f.structure==='individual'?[['Trustee 1',fullName(state.lead)],['Trustee 2',fullName(t.second)],['Relationship',t.second.relationship]]:[['Company',t.company_name+(t.company_mode==='existing'?' (ACN '+t.acn+')':' (new registration)')],['Registered office',t.company_mode==='new'?(t.office_same==='yes'?'Member 1 home address':[t.office.street,t.office.suburb,t.office.state,t.office.postcode].filter(Boolean).join(', ')):'As registered'],['Directors',state.members.map(fullName).filter(Boolean).join(', ')]];
-  const memberBlocks=state.members.map((m,i)=>`<div class="rv"><div class="rh"><b>Member ${i+1}</b><button class="btn sm ghost" data-act="go" data-to="members">Edit</button></div>${kv([['Name',fullName(m)],['Date of birth',m.dob],['Address',[m.addr.street,m.addr.suburb,m.addr.state,m.addr.postcode].filter(Boolean).join(', ')],['Contact',m.email+' · '+m.mobile],['Tax resident',m.resident],['Employer super',m.employer_contrib],['Rolling in',m.rollover_funds?m.rollover_funds+(m.rollover_balance?' ('+(BAL.find(x=>x[0]===m.rollover_balance)||[])[1]+')':''):'None listed']])}</div>`).join('');
+  const trusteeRows=f.structure==='individual'?[['Trustee 1',fullName(state.lead)],['Trustee 2',fullName(t.second)],['Relationship',t.second.relationship],['Trustee 2 address',Number(f.member_count)===1?[t.second.addr.street,t.second.addr.suburb,t.second.addr.state,t.second.addr.postcode].filter(Boolean).join(', '):'As member 2']]:[['Company',t.company_name+(t.company_mode==='existing'?' (ACN '+t.acn+')':' (new registration)')],['Registered office',t.company_mode==='new'?(t.office_same==='yes'?'Member 1 home address':[t.office.street,t.office.suburb,t.office.state,t.office.postcode].filter(Boolean).join(', ')):'As registered'],['Directors',state.members.map(fullName).filter(Boolean).join(', ')],['Shareholders',t.company_mode==='new'?(t.shareholders==='other'?(t.shareholders_other||'To be discussed'):'Members in equal shares'):'As registered']];
+  const memberBlocks=state.members.map((m,i)=>`<div class="rv"><div class="rh"><b>Member ${i+1}</b><button class="btn sm ghost" data-act="go" data-to="members">Edit</button></div>${kv([['Name',fullName(m)],['Date of birth',m.dob],['Address',[m.addr.street,m.addr.suburb,m.addr.state,m.addr.postcode].filter(Boolean).join(', ')],['Contact',m.email+' · '+m.mobile],['Tax resident',m.resident],['Employer super',m.employer_contrib],['Rolling in',m.rollover_funds?m.rollover_funds+(m.rollover_member_no?' #'+m.rollover_member_no:'')+(m.rollover_balance?' ('+(BAL.find(x=>x[0]===m.rollover_balance)||[])[1]+')':''):'None listed']].concat(f.structure==='corporate'?[['Director ID',m.director_id],['Place of birth',m.birthplace]]:[]))}</div>`).join('');
   return `<div class="col">
   <div class="stack"><div class="eyebrow">Section 5 of 5</div><h2>Check and submit</h2><p class="lede">Have a look over everything. You can edit any section. Blank items are fine; a consultant will complete them with you.</p></div>
   <div class="rv"><div class="rh"><b>Fund</b><button class="btn sm ghost" data-act="go" data-to="fund">Edit</button></div>${kv([['Name',f.name],['Structure',structure],['Members',f.member_count],['Existing super',f.rollover],['Starting balance',(BAL.find(x=>x[0]===f.balance)||[])[1]],['Timeframe',f.timeline]])}</div>
@@ -796,9 +808,9 @@ function demoFill(){
   const L=state.lead; Object.assign(L,{first:'Priya',last:'Natarajan',email:'priya.example@example.com',mobile:'0412 000 123',consent_contact:true,consent_marketing:true,intent:'self'});
   L.source=Object.assign({},L.source,{utm_source:'meta',utm_medium:'paid_social',utm_campaign:'smsf_start_q4',example:true});
   Object.assign(state.fund,{name:'The Natarajan Superannuation Fund',structure:'corporate',member_count:'2',rollover:'yes',balance:'250_500',timeline:'asap'});
-  Object.assign(state.trustee,{company_mode:'new',company_name:'Natarajan Super Pty Ltd',office_same:'yes',directors_confirmed:true});
-  state.members=[Object.assign(blankMember(),{first:'Priya',last:'Natarajan',dob:'1984-03-12',email:'priya.example@example.com',mobile:'0412 000 123',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'AustralianSuper',rollover_balance:'250_500'}),
-    Object.assign(blankMember(),{first:'Daniel',last:'Okafor',dob:'1982-09-30',email:'daniel.example@example.com',mobile:'0433 000 456',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'Hostplus',rollover_balance:'100_250'})];
+  Object.assign(state.trustee,{company_mode:'new',company_name:'Natarajan Super Pty Ltd',office_same:'yes',shareholders:'members',directors_confirmed:true});
+  state.members=[Object.assign(blankMember(),{first:'Priya',middle:'Lakshmi',last:'Natarajan',dob:'1984-03-12',email:'priya.example@example.com',mobile:'0412 000 123',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'AustralianSuper',rollover_member_no:'12345678',rollover_balance:'250_500',director_id:'036 111 222 333 444',birthplace:'Chennai, India'}),
+    Object.assign(blankMember(),{first:'Daniel',middle:'',last:'Okafor',dob:'1982-09-30',email:'daniel.example@example.com',mobile:'0433 000 456',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'Hostplus',rollover_member_no:'',rollover_balance:'100_250',director_id:'036 555 666 777 888',birthplace:'Lagos, Nigeria'})];
   Object.assign(state.banking,{cash_account:'idealx',primary_contact:'0',adviser:'no',contact_method:'phone',contact_time:'morning'});
   L.consent={method:'disclaimer_then_get_started',version:CONSENT_VERSION,text:CONSENT_TEXT,at:nowIso()};
   if(!L.id){ L.id=uid('lead'); L.created_at=nowIso(); state.progress.application_id=uid('app'); emit('lead.created',{first:L.first,last:L.last,email:L.email,mobile:L.mobile,consent_contact:true,consent:L.consent,consent_marketing:true,intent:'self',source:L.source,example:true}); }
