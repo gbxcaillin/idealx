@@ -16,7 +16,7 @@ Open `index.html` in any browser. It is one self-contained file: no build step, 
 
 ## Screens
 
-1. **Landing.** Headline, two calls to action, what you'll need, and a comparison of individual vs corporate trustees. Shows a "welcome back" banner if there is saved progress.
+1. **Landing.** Headline, two calls to action, the trust section (video slot, who and why, trust signals), what you'll need, and a comparison of individual vs corporate trustees. Shows a "welcome back" banner if there is saved progress.
 2. **Contact + Get started.** Name, email, mobile, and an optional marketing tick. A disclaimer sits above the Get started button: pressing it is consent to save progress and be contacted if they stop. The disclaimer text, version and timestamp are stored on the lead. This creates the lead.
 3. **Fund.** Fund name, trustee structure, member count (1–6), existing super, balance range, timeframe. Inline notes explain the single-member rules for each structure.
 4. **Trustee.** Branches on structure. Individual: second trustee details, and relationship if the fund has one member. Corporate: new or existing company, company name or ACN, registered office, confirmation that members are directors.
@@ -26,11 +26,27 @@ Open `index.html` in any browser. It is one self-contained file: no build step, 
 8. **Confirmation.** Reference number and the next steps (secure account invite, deed, ATO registration, rollovers). Optional booking.
 9. **Hand-off confirmation.** Shown after a tap-out: what was booked or sent, and which sections are complete.
 
+## Brand theme switcher
+
+A bar at the top lets reviewers switch the whole prototype between four palettes derived from idealx.com. The choice is remembered in the browser. The **Theme** tab in Board notes lists each palette's base tokens for a brand guide.
+
+| Theme | Ground | Accent | Reads as |
+|---|---|---|---|
+| Matte Indigo | `#0c0c10` | `#6366f1` | The website as it is; follows the viewer's light/dark setting |
+| Obsidian Teal | `#0a0e10` | `#2dd4bf` | Live data, fintech |
+| Ivory Indigo | `#f5f3ee` | `#3b3ccc` | Private-bank calm, safest for an older audience |
+| Slate Gold | `#0f1420` | `#d4a84b` | Wealth cues inside the dark family |
+
+## Trust section (above the form)
+
+Between the hero and the "what you'll need" card the landing page has a slot for a trust video, a "Who is IdealX" paragraph, a "Why set up through IdealX" list and eight trust-signal tiles. Facts already on idealx.com are filled in (AFSL, AUSTRAC registration, ABN, Melbourne). Bracketed items are for the board to supply. Every piece of text in that section is click-to-edit in the browser so wording can be tried during review; edits stay local to that browser, and "Reset trust-section copy" in Board notes clears them.
+
 ## Board notes drawer
 
 The "Board notes" button opens a side panel for reviewers:
 
 - **Flow.** Current status, the three journeys, demo controls (fill with example data, simulate abandonment, reset, jump to any screen).
+- **Theme.** The four palettes with hex tokens, and a reset for trust-section copy edits.
 - **Events.** Every event the page would send to the CRM, as JSON, newest first. An optional webhook URL field POSTs them for real.
 - **Record.** The lead and application record as it would be stored.
 - **Nurture.** The re-engagement sequence and its stop conditions.

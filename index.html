@@ -38,6 +38,10 @@
   --shadow:0 20px 60px rgba(20,20,40,.18);
   color-scheme:light;
 }
+/* Brand theme candidates for board review. Each commits to one look and overrides the viewer's light/dark choice. */
+:root[data-brand="teal"]{--bg:#0a0e10;--surface:#12181b;--surface-2:#182125;--fg:#eef3f2;--muted:#93a3a3;--line:#243034;--line-strong:#34454c;--accent:#2dd4bf;--accent-strong:#5eead4;--accent-soft:rgba(45,212,191,.14);--on-accent:#06201c;--good:#4ade80;--good-soft:rgba(74,222,128,.14);--warn:#fbbf24;--warn-soft:rgba(251,191,36,.14);--bad:#f87171;--bad-soft:rgba(248,113,113,.14);--shadow:0 20px 60px rgba(0,0,0,.5);color-scheme:dark}
+:root[data-brand="ivory"]{--bg:#f5f3ee;--surface:#fffdf9;--surface-2:#edeae2;--fg:#15151c;--muted:#5f5e6a;--line:#dfdbd1;--line-strong:#c7c2b5;--accent:#3b3ccc;--accent-strong:#2f30b3;--accent-soft:rgba(59,60,204,.10);--on-accent:#ffffff;--good:#1f9f68;--good-soft:rgba(31,159,104,.12);--warn:#b7831a;--warn-soft:rgba(183,131,26,.12);--bad:#cf4444;--bad-soft:rgba(207,68,68,.10);--shadow:0 20px 60px rgba(40,30,10,.16);color-scheme:light}
+:root[data-brand="slate"]{--bg:#0f1420;--surface:#161c2b;--surface-2:#1d2436;--fg:#eef0f6;--muted:#98a0b5;--line:#28314a;--line-strong:#39435f;--accent:#d4a84b;--accent-strong:#e6bd63;--accent-soft:rgba(212,168,75,.14);--on-accent:#17120a;--good:#4ade80;--good-soft:rgba(74,222,128,.14);--warn:#fbbf24;--warn-soft:rgba(251,191,36,.14);--bad:#f87171;--bad-soft:rgba(248,113,113,.14);--shadow:0 20px 60px rgba(0,0,0,.5);color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
@@ -79,7 +83,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 /* Page body */
 main{padding-block:28px 96px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.col{max-width:720px;margin:0 auto;display:grid;gap:28px}
+.col{max-width:720px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:28px}
+.col > *,.trust-grid > *,.whywho > *,.stack > *{min-width:0}
 .col.wide{max-width:1000px}
 .stack{display:grid;gap:16px}
 .stack.tight{gap:10px}
@@ -178,6 +183,41 @@ ol.next{margin:0;padding-left:20px;display:grid;gap:8px}
 .slot.on{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
 .slot[disabled]{opacity:.35;text-decoration:line-through;cursor:not-allowed}
 
+/* Theme bar (board review tool) */
+.themebar{background:var(--surface-2);border-bottom:1px solid var(--line)}
+.themebar-in{max-width:1100px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
+.themebar .tl{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;font-weight:600}
+.tbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:4px 12px 4px 5px;font-size:.8rem;white-space:nowrap;color:var(--fg)}
+.tbtn.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.sw{display:inline-flex;width:20px;height:20px;border-radius:50%;overflow:hidden;border:1px solid var(--line-strong);flex:none}
+.sw i{flex:1;display:block}
+#themeBtns{display:flex;gap:8px;flex-wrap:wrap;flex:1 1 auto;min-width:0}
+.themebar .td{font-size:.78rem;color:var(--muted);margin-left:auto;padding-left:8px;flex:1;min-width:0;text-align:right}
+@media (max-width:700px){.themebar .td{display:none}}
+
+/* Trust section */
+.trust{display:grid;gap:24px}
+.trust-grid{display:grid;grid-template-columns:1fr;gap:24px}
+@media (min-width:860px){.trust-grid{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}}
+.video{aspect-ratio:16/9;width:100%;max-width:100%;min-width:0;border:1px dashed var(--line-strong);border-radius:12px;background:var(--surface);display:grid;place-items:center;text-align:center;padding:20px;gap:10px;align-content:center}
+.video .play{width:64px;height:64px;border-radius:50%;border:2px solid var(--accent);display:grid;place-items:center;color:var(--accent-strong);margin:0 auto 6px}
+.video .play::after{content:'';display:block;width:0;height:0;border-left:18px solid currentColor;border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:4px}
+.video b{font-weight:600}
+.video .small{max-width:38ch;margin:0 auto}
+.whywho{display:grid;gap:18px}
+.whywho h3{margin-bottom:6px}
+.whywho ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.signals{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.signal{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:3px;background:var(--surface)}
+.signal .k{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.signal .v{font-weight:500;font-size:.95rem;overflow-wrap:anywhere}
+.tbd{color:var(--muted)}
+[data-edit]{border-radius:4px;outline:1px dashed transparent;outline-offset:3px;transition:outline-color .15s}
+[data-edit]:hover{outline-color:var(--line-strong)}
+[data-edit]:focus{outline:1px dashed var(--accent);background:var(--accent-soft)}
+.edit-hint{display:flex;gap:8px;align-items:center;font-size:.78rem;color:var(--muted)}
+.edit-hint .pill{text-transform:none;letter-spacing:0}
+
 /* Nudge toast */
 .nudge{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:35;margin:0 auto;max-width:520px;background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow)}
 .nudge p{flex:1;min-width:0;font-size:.9rem}
@@ -208,6 +248,7 @@ body.drawer-open main,body.drawer-open .top-in,body.drawer-open footer .in{max-w
 </style>
 </head>
 <body>
+<div class="themebar" id="themebar"><div class="themebar-in"><span class="tl">Theme</span><span id="themeBtns"></span><span class="td" id="themeDesc"></span></div></div>
 <header class="top">
   <div class="top-in">
     <a class="wordmark" href="#" id="home">IDEALX <span>SMSF Start</span></a>
@@ -246,6 +287,26 @@ const NURTURE = [
   ['T+14 days','Email','Last-chance note from a named specialist with a booking link','Book'],
   ['T+30 days','Stop','Moves to monthly newsletter unless they opted out of marketing','']
 ];
+
+/* ---------- brand themes (board review) ---------- */
+const THEMES=[
+  {key:'matte',name:'Matte Indigo',desc:'The website as it is: matte black ground, indigo as the single accent. Follows the viewer\'s light or dark setting.',sw:['#0c0c10','#6366f1'],hex:{ground:'#0c0c10',surface:'#15151b',text:'#f1f0ec',muted:'#9b9ba9',accent:'#6366f1'}},
+  {key:'teal',name:'Obsidian Teal',desc:'Same black ground, accent shifted to teal to read as "live data" and fintech rather than legal.',sw:['#0a0e10','#2dd4bf'],hex:{ground:'#0a0e10',surface:'#12181b',text:'#eef3f2',muted:'#93a3a3',accent:'#2dd4bf'}},
+  {key:'ivory',name:'Ivory Indigo',desc:'Light paper ground with deep indigo. Reads as private-bank calm; the safest choice for an older audience.',sw:['#f5f3ee','#3b3ccc'],hex:{ground:'#f5f3ee',surface:'#fffdf9',text:'#15151c',muted:'#5f5e6a',accent:'#3b3ccc'}},
+  {key:'slate',name:'Slate Gold',desc:'Deep slate blue ground with a warm gold accent. Wealth cues without leaving the dark family.',sw:['#0f1420','#d4a84b'],hex:{ground:'#0f1420',surface:'#161c2b',text:'#eef0f6',muted:'#98a0b5',accent:'#d4a84b'}}
+];
+const BRAND_KEY='idealx.brand', COPY_KEY='idealx.copy';
+function currentBrand(){ return document.documentElement.dataset.brand||'matte'; }
+function applyBrand(k){ if(k==='matte') delete document.documentElement.dataset.brand; else document.documentElement.dataset.brand=k; try{ localStorage.setItem(BRAND_KEY,k); }catch(e){} renderThemeBar(); if(drawerOpen) renderDrawer(); }
+function renderThemeBar(){ const k=currentBrand(); const t=THEMES.find(x=>x.key===k)||THEMES[0];
+  document.getElementById('themeBtns').innerHTML=THEMES.map(x=>`<button class="tbtn ${x.key===k?'on':''}" data-brand="${x.key}" aria-pressed="${x.key===k}"><span class="sw"><i style="background:${x.sw[0]}"></i><i style="background:${x.sw[1]}"></i></span>${x.name}</button>`).join(' ');
+  document.getElementById('themeDesc').textContent=t.desc; }
+document.getElementById('themeBtns').addEventListener('click',e=>{ const b=e.target.closest('[data-brand]'); if(b) applyBrand(b.dataset.brand); });
+let copyEdits={};
+function loadCopy(){ try{ copyEdits=JSON.parse(localStorage.getItem(COPY_KEY)||'{}')||{}; }catch(e){ copyEdits={}; } }
+function applyCopy(){ document.querySelectorAll('[data-edit]').forEach(el=>{ el.setAttribute('contenteditable','true'); el.setAttribute('spellcheck','true'); const k=el.dataset.edit; if(copyEdits[k]!=null) el.textContent=copyEdits[k]; }); }
+document.addEventListener('input',e=>{ const el=e.target.closest&&e.target.closest('[data-edit]'); if(!el) return; copyEdits[el.dataset.edit]=el.textContent; try{ localStorage.setItem(COPY_KEY,JSON.stringify(copyEdits)); }catch(err){} });
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.closest&&e.target.closest('[data-edit]')&&e.target.closest('[data-edit]').tagName!=='P'){ e.preventDefault(); e.target.blur(); } });
 
 /* ---------- state ---------- */
 const fresh = () => ({
@@ -386,6 +447,36 @@ function landing(){
     <p class="lede">Tell us who's in the fund and how you want it run. Do it all yourself, or stop wherever you like and a specialist picks it up with you on the phone. Nothing you enter is lost.</p>
     <div class="ctas"><button class="btn primary" data-act="start">Start setting up my fund</button><button class="btn" data-act="talk">Talk to someone first</button></div>
     <div class="small muted">No tax file numbers or ID documents on this page. Those happen inside your secure IdealX account.</div>
+  </section>
+  <section class="trust" aria-label="About IdealX">
+    <div class="edit-hint"><span class="pill accent">Board draft</span><span>Click any text in this section to edit it. Edits stay in this browser so you can try wording during review.</span></div>
+    <div class="trust-grid">
+      <div class="video" role="img" aria-label="Trust video placeholder">
+        <div class="play" aria-hidden="true"></div>
+        <b data-edit="video_title">Trust video goes here</b>
+        <span class="small muted" data-edit="video_brief">60 to 90 seconds, a founder to camera. Who IdealX is, what happens to a client's money, who regulates it, and what the first week looks like.</span>
+      </div>
+      <div class="whywho">
+        <div><h3 data-edit="who_h">Who is IdealX</h3><p data-edit="who_p">IdealX is a Melbourne-based platform that gives trustees, advisers and directors one live view of a self-managed super fund, a company and a family trust. It keeps the record and the login; investments are issued by licensed partners. [Add founding year, team, and who backs the company.]</p></div>
+        <div><h3 data-edit="why_h">Why set up your fund through IdealX</h3><ul>
+          <li data-edit="why_1">One place for the fund, the trustee company and the trust, with every position visible as it happens.</li>
+          <li data-edit="why_2">A person on the phone whenever you want one, during set-up and after.</li>
+          <li data-edit="why_3">Your adviser or accountant can work alongside you in the Console, with only the access you grant.</li>
+          <li data-edit="why_4">[Add fee position, time to set up, or a comparison with the traditional accountant route.]</li>
+        </ul></div>
+      </div>
+    </div>
+    <div class="signals">
+      <div class="signal"><span class="k">Licensed</span><span class="v" data-edit="sig_1">AFSL 531729 via Idealx Securities Limited</span></div>
+      <div class="signal"><span class="k">Registered</span><span class="v" data-edit="sig_2">AUSTRAC-registered digital assets entity</span></div>
+      <div class="signal"><span class="k">Entity</span><span class="v" data-edit="sig_3">Idealx Platform Pty Ltd, ABN 83 694 912 126</span></div>
+      <div class="signal"><span class="k">Based in</span><span class="v" data-edit="sig_4">Melbourne, Australia</span></div>
+      <div class="signal"><span class="k">Clients</span><span class="v tbd" data-edit="sig_5">[Number of funds or clients on the platform]</span></div>
+      <div class="signal"><span class="k">Partners</span><span class="v tbd" data-edit="sig_6">[Custodian, bank and product partner logos]</span></div>
+      <div class="signal"><span class="k">Reviews</span><span class="v tbd" data-edit="sig_7">[Google rating, testimonial, or media mention]</span></div>
+      <div class="signal"><span class="k">Security</span><span class="v tbd" data-edit="sig_8">[Where data is stored, identity checks, 2FA]</span></div>
+    </div>
+    <div class="ctas"><button class="btn primary" data-act="start">Start setting up my fund</button><button class="btn" data-act="talk">Talk to someone first</button></div>
   </section>
   <div class="points">
     <div class="point"><b>Individual or corporate trustee</b><span class="muted small">Two or more people as trustees, or a company you already have or we register for you.</span></div>
@@ -604,7 +695,7 @@ function exportRecord(){ const r=JSON.parse(JSON.stringify(state)); delete r.ui;
 function renderDrawer(){
   const d=$('#drawer'); d.hidden=!drawerOpen; document.body.classList.toggle('drawer-open',drawerOpen); if(!drawerOpen) return;
   const tab=state.ui.notesTab;
-  const tabs=[['flow','Flow'],['events','Events ('+events.length+')'],['data','Record'],['nurture','Nurture']];
+  const tabs=[['flow','Flow'],['theme','Theme'],['events','Events ('+events.length+')'],['data','Record'],['nurture','Nurture']];
   let body='';
   if(tab==='flow'){
     body=`<div class="status-line"><span class="pill ${ {new:'',in_progress:'accent',saved:'warn',booked:'good',callback:'good',abandoned:'bad',submitted:'good'}[state.progress.status]||''}">${state.progress.status.replace('_',' ')}</span><span class="muted">step: <b class="mono">${state.progress.step}</b></span>${state.lead.id?`<span class="muted mono small">${state.lead.id}</span>`:''}</div>
@@ -615,6 +706,13 @@ function renderDrawer(){
     <div class="row"><button class="btn sm" data-act="demo-fill">Fill with example data</button><button class="btn sm" data-act="demo-abandon">Simulate abandonment</button><button class="btn sm ghost" data-act="restart">Reset prototype</button></div>
     <div class="row">${['landing','consent','fund','trustee','members','banking','review','done','handoff'].map(s=>`<button class="btn sm ghost" data-act="jump" data-to="${s}">${s}</button>`).join('')}</div></div>
     <div class="small muted">Example data is marked as such in the record and is never a real person.</div>`;
+  } else if(tab==='theme'){
+    const k=currentBrand();
+    body=`<div class="small muted">Four palettes derived from idealx.com (matte black objects, indigo accents, plain copy). Pick one in the bar at the top; the whole prototype re-skins. Values below are the base tokens for a brand guide.</div>
+    ${THEMES.map(t=>`<div class="journey" style="border-color:${t.key===k?'var(--accent)':'var(--line)'}"><div class="row" style="justify-content:space-between"><b>${t.name}</b>${t.key===k?'<span class="pill accent">selected</span>':`<button class="btn sm ghost" data-brand-pick="${t.key}">Preview</button>`}</div><div class="small muted">${t.desc}</div>
+    <div class="row">${Object.entries(t.hex).map(([n,h])=>`<span class="row" style="gap:6px"><span class="sw" style="width:16px;height:16px"><i style="background:${h}"></i></span><span class="mono small">${n} ${h}</span></span>`).join('')}</div></div>`).join('')}
+    <div class="small muted">Type stays constant across themes: Fraunces for headings, Instrument Sans for everything else, JetBrains Mono for data. Say the word and I can add type variants too.</div>
+    <div class="row"><button class="btn sm ghost" data-act="reset-copy">Reset trust-section copy</button><span class="small muted">Copy edits live in this browser only.</span></div>`;
   } else if(tab==='events'){
     body=`<div class="f"><label for="f-webhook">Webhook URL <span class="muted">(optional)</span></label><input id="f-webhook" data-bind="ui.webhook" value="${esc(state.ui.webhook)}" placeholder="https://example.com/hooks/smsf-start"><div class="hint">Every event below is POSTed here as JSON when set. Leave blank for the demo.</div></div>
     <div class="row"><button class="btn sm" data-act="copy-events">Copy all as JSON</button><span class="small muted" id="copyMsg"></span></div>
@@ -651,6 +749,7 @@ function render(){
   const step=state.progress.step;
   const views={landing,consent,fund:fundStep,trustee:trusteeStep,members:membersStep,banking:bankingStep,review:reviewStep,done:doneScreen,handoff:handoffScreen};
   $('#app').innerHTML=(views[step]||landing)();
+  if(step==='landing') applyCopy();
   const inForm=FORM_STEPS.includes(step);
   $('#helpBtn').hidden=!(inForm&&state.lead.id);
   $('#progress').hidden=!inForm; $('#stepline').hidden=!inForm;
@@ -670,6 +769,7 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{ const el=e.target; if(el.dataset.bind&&(el.tagName==='SELECT'||el.type==='radio'||el.type==='checkbox')) el.dispatchEvent(new Event('input',{bubbles:true})); });
 document.addEventListener('click',e=>{
+  const bp=e.target.closest('[data-brand-pick]'); if(bp){ applyBrand(bp.dataset.brandPick); return; }
   const t=e.target.closest('[data-act]'); if(!t) return;
   const a=t.dataset.act;
   if(a==='help-close-scrim'&&e.target!==t) return;
@@ -695,6 +795,7 @@ document.addEventListener('click',e=>{
     case 'nudge-close': hideNudge(); break;
     case 'notes-close': drawerOpen=false; renderDrawer(); break;
     case 'notes-tab': state.ui.notesTab=t.dataset.tab; renderDrawer(); break;
+    case 'reset-copy': copyEdits={}; try{ localStorage.removeItem(COPY_KEY); }catch(err){} render(); renderDrawer(); break;
     case 'demo-fill': demoFill(); renderDrawer(); break;
     case 'demo-abandon': if(!state.lead.id){ demoFill(); } state.progress.status='in_progress'; markAbandoned('demo_button'); state.ui.notesTab='events'; renderDrawer(); break;
     case 'jump': { const to=t.dataset.to; if(!state.lead.id&&!['landing','consent'].includes(to)) demoFill(); if(to==='done'&&state.progress.status!=='submitted'){ state.progress.status='submitted'; } if(to==='handoff'&&!['booked','callback','saved'].includes(state.progress.status)) state.progress.status='saved'; go(to); renderDrawer(); break; }
@@ -709,7 +810,8 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(state.ui.helpV
 
 /* ---------- boot ---------- */
 function start(){
-  load(); captureSource();
+  load(); captureSource(); loadCopy();
+  try{ const b=localStorage.getItem(BRAND_KEY); if(b&&THEMES.some(t=>t.key===b)) applyBrand(b); else renderThemeBar(); }catch(e){ renderThemeBar(); }
   if(state.progress.step!=='landing'&&state.progress.step!=='done'&&state.progress.step!=='handoff') state.progress.step='landing';
   if(state.progress.status==='abandoned') emit('session.returned',{via:'direct',nurture:'paused'});
   render();
