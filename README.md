@@ -18,8 +18,8 @@ Open `index.html` in any browser. It is one self-contained file: no build step, 
 
 1. **Landing.** Headline, two calls to action, the trust section (video slot, who and why, trust signals), what you'll need, and a comparison of individual vs corporate trustees. Shows a "welcome back" banner if there is saved progress.
 2. **Contact + Get started.** Name, email, mobile, and an optional marketing tick. A disclaimer sits above the Get started button: pressing it is consent to save progress and be contacted if they stop. The disclaimer text, version and timestamp are stored on the lead. This creates the lead.
-3. **Fund.** Fund name, trustee structure, member count (1–6), existing super, balance range, timeframe. Inline notes explain the single-member rules for each structure.
-4. **Trustee.** Branches on structure. Individual: second trustee details, and relationship if the fund has one member. Corporate: new or existing company, company name or ACN, registered office, confirmation that members are directors.
+3. **Fund.** Fund name, trustee structure, member count (1–6), existing super, balance range, timeframe. Inline notes explain the single-member rules for each structure. All optional.
+4. **Trustee.** Branches on structure, or offers the structure choice again if none was picked. Individual: second trustee details, and relationship if the fund has one member. Corporate: new or existing company, company name or ACN, registered office, confirmation that members are directors.
 5. **Members.** One card per member, prefilled from earlier answers. Name, date of birth, address, contact details, tax residency, employer contributions, rollover funds. No TFN, no ID upload.
 6. **Banking and contact.** IdealX cash account or own bank, primary contact, adviser involvement, best way and time to reach them.
 7. **Review.** Full summary with edit links and three declarations. Submit.
@@ -54,6 +54,8 @@ The "Board notes" button opens a side panel for reviewers:
 - **Nurture.** The re-engagement sequence and its stop conditions.
 
 ## Data design (own database + webhook)
+
+Only first name, last name, email and mobile are required, on the contact screen. Every other field is optional so a visitor can always move to the next screen; a consultant completes the rest with them. Format checks still apply when a value is entered (date of birth 18+, email, Australian mobile, 4-digit postcode, 9-digit ACN). The three declarations on the review screen are required to submit. Every field carries an "i" button whose tooltip explains why it is asked, for compliance or operations; the same text is in the SMSF Start Information Flow doc.
 
 The prototype stores state in the browser only. In production each event is a `POST` to a webhook with this shape:
 
