@@ -132,7 +132,8 @@ select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(
 .check.has-err{border-color:var(--bad)}
 .check .err{display:none}
 .check.has-err .err{display:block;font-size:.8rem;color:var(--bad)}
-.consent{background:var(--surface-2)}
+.disclaimer{display:grid;gap:8px;padding:14px 16px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);font-size:.92rem;line-height:1.5}
+.disclaimer b{font-weight:600}
 .section-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .member{border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px;background:var(--surface)}
 .member .mh{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -232,6 +233,8 @@ body.drawer-open main,body.drawer-open .top-in,body.drawer-open footer .in{max-w
 const STORE_KEY = 'idealx.smsf.start.v1';
 const FORM_STEPS = ['fund','trustee','members','banking','review'];
 const STEP_TITLES = {fund:'Your fund',trustee:'Trustee',members:'Members',banking:'Banking & contact',review:'Review'};
+const CONSENT_TEXT = 'By pressing Get started you agree that IdealX saves what you enter as you go, and that if you stop before finishing, a specialist may contact you by phone, SMS or email to help you complete it. You can ask us to stop at any time.';
+const CONSENT_VERSION = '2026-10-14.v2';
 const STATES = ['VIC','NSW','QLD','WA','SA','TAS','ACT','NT'];
 const BAL = [['lt100','Under $100k'],['100_250','$100k – $250k'],['250_500','$250k – $500k'],['500_1m','$500k – $1m'],['gt1m','Over $1m'],['unsure','Not sure yet']];
 const NURTURE = [
@@ -246,7 +249,7 @@ const NURTURE = [
 
 /* ---------- state ---------- */
 const fresh = () => ({
-  lead:{id:null,first:'',last:'',email:'',mobile:'',consent_contact:false,consent_marketing:false,intent:'self',source:{},created_at:null},
+  lead:{id:null,first:'',last:'',email:'',mobile:'',consent_contact:false,consent:null,consent_marketing:false,intent:'self',source:{},created_at:null},
   fund:{name:'',structure:'',member_count:'2',rollover:'',balance:'',timeline:''},
   trustee:{second:{first:'',last:'',dob:'',email:'',mobile:'',relationship:''},company_mode:'',company_name:'',acn:'',office_same:'yes',office:{street:'',suburb:'',state:'',postcode:''},directors_confirmed:false},
   members:[],
@@ -332,7 +335,7 @@ function personErrors(pfx,o,E,opts={}){
   if(opts.address){ const a=o.addr||{}; if(!a.street) E[pfx+'.addr.street']='Enter a street address.'; if(!a.suburb) E[pfx+'.addr.suburb']='Enter a suburb.'; if(!a.state) E[pfx+'.addr.state']='Choose a state.'; if(!/^\d{4}$/.test(a.postcode||'')) E[pfx+'.addr.postcode']='Enter a 4-digit postcode.'; }
 }
 const validators = {
-  consent(){ const E={}, l=state.lead; if(!l.first) E['lead.first']='Enter your first name.'; if(!l.last) E['lead.last']='Enter your last name.'; if(!isEmail(l.email)) E['lead.email']='Enter a valid email address.'; if(!isMobile(l.mobile)) E['lead.mobile']='Enter an Australian mobile number, e.g. 0412 345 678.'; if(!l.consent_contact) E['lead.consent_contact']='We need this consent to save your progress and follow up.'; return E; },
+  consent(){ const E={}, l=state.lead; if(!l.first) E['lead.first']='Enter your first name.'; if(!l.last) E['lead.last']='Enter your last name.'; if(!isEmail(l.email)) E['lead.email']='Enter a valid email address.'; if(!isMobile(l.mobile)) E['lead.mobile']='Enter an Australian mobile number, e.g. 0412 345 678.'; return E; },
   fund(){ const E={}, f=state.fund; if(!f.name||f.name.length<4) E['fund.name']='Give the fund a name. You can change it before the deed is prepared.'; if(!f.structure) E['fund.structure']='Choose a trustee structure.'; if(!f.member_count) E['fund.member_count']='Choose how many members.'; if(!f.rollover) E['fund.rollover']='Let us know about existing super.'; if(!f.balance) E['fund.balance']='Pick a range.'; if(!f.timeline) E['fund.timeline']='Pick a timeframe.'; return E; },
   trustee(){ const E={}, t=state.trustee; if(state.fund.structure==='individual'){ personErrors('trustee.second',t.second,E); if(Number(state.fund.member_count)===1&&!t.second.relationship) E['trustee.second.relationship']='Tell us how you know them.'; }
     else { if(!t.company_mode) E['trustee.company_mode']='Choose one.'; if(!t.company_name||t.company_name.length<3) E['trustee.company_name']='Enter the company name.'; if(t.company_mode==='existing'&&!/^\d{9}$/.test((t.acn||'').replace(/\s/g,''))) E['trustee.acn']='Enter the 9-digit ACN.'; if(t.company_mode==='new'&&t.office_same==='no'){ const a=t.office; if(!a.street) E['trustee.office.street']='Enter a street address.'; if(!a.suburb) E['trustee.office.suburb']='Enter a suburb.'; if(!a.state) E['trustee.office.state']='Choose a state.'; if(!/^\d{4}$/.test(a.postcode||'')) E['trustee.office.postcode']='Enter a 4-digit postcode.'; } if(!t.directors_confirmed) E['trustee.directors_confirmed']='Please confirm.'; }
@@ -363,7 +366,8 @@ function completeStep(step,next){
   const E=validators[step]?validators[step]():{};
   if(Object.keys(E).length){ state.ui.errors=E; render(); const first=document.querySelector('.has-err'); if(first) first.scrollIntoView({block:'center'}); return; }
   if(!state.progress.completed.includes(step)) state.progress.completed.push(step);
-  if(step==='consent'){ if(!state.lead.id){ state.lead.id=uid('lead'); state.lead.created_at=nowIso(); state.progress.application_id=uid('app'); emit('lead.created',{first:state.lead.first,last:state.lead.last,email:state.lead.email,mobile:state.lead.mobile,consent_contact:true,consent_marketing:state.lead.consent_marketing,intent:state.lead.intent,source:state.lead.source}); } else { emit('lead.updated',{email:state.lead.email,mobile:state.lead.mobile,consent_marketing:state.lead.consent_marketing}); }
+  if(step==='consent'){ state.lead.consent_contact=true; state.lead.consent={method:'disclaimer_then_get_started',version:CONSENT_VERSION,text:CONSENT_TEXT,at:nowIso()};
+    if(!state.lead.id){ state.lead.id=uid('lead'); state.lead.created_at=nowIso(); state.progress.application_id=uid('app'); emit('lead.created',{first:state.lead.first,last:state.lead.last,email:state.lead.email,mobile:state.lead.mobile,consent_contact:true,consent:state.lead.consent,consent_marketing:state.lead.consent_marketing,intent:state.lead.intent,source:state.lead.source}); } else { emit('lead.updated',{email:state.lead.email,mobile:state.lead.mobile,consent_marketing:state.lead.consent_marketing}); }
     if(state.lead.intent==='assisted'){ state.progress.status='in_progress'; save(); go('fund'); openHelp('book'); return; } }
   else { emit('step.completed',{section:step,snapshot:snapshot(),section_data:sectionData(step)}); }
   if(step==='trustee'||step==='fund') syncMembers();
@@ -415,12 +419,9 @@ function consent(){
   <p class="lede">${assisted?'Leave your details and pick a time. We hold your place while you choose.':'We save your progress against these details so you can finish any time, on any device.'}</p></div>
   <div class="grid2">${field('lead.first','First name',{ac:'given-name'})}${field('lead.last','Last name',{ac:'family-name'})}</div>
   <div class="grid2">${field('lead.email','Email',{type:'email',ac:'email',im:'email'})}${field('lead.mobile','Mobile',{type:'tel',ac:'tel',im:'tel',ph:'04xx xxx xxx'})}</div>
-  <div class="stack tight">
-    ${check('lead.consent_contact','<b>Save my progress and follow up if I stop.</b> I understand that if I don\'t finish, IdealX keeps what I\'ve entered and may contact me by phone, SMS or email to help me complete it. I can ask them to stop at any time.',{cls:'consent'})}
-    ${check('lead.consent_marketing','Also send me occasional IdealX news and SMSF guides. <span class="muted">(optional)</span>')}
-    <div class="small muted">We handle your details under the <a href="https://www.idealx.com/legal" target="_blank" rel="noopener">IdealX Privacy Policy</a>. We never sell your data.</div>
-  </div>
-  <div class="actions"><button class="btn ghost" data-act="go" data-to="landing">Back</button><div class="right"><button class="btn primary" data-act="complete" data-step="consent" data-next="fund">${assisted?'Save and pick a time':'Continue'}</button></div></div>
+  ${check('lead.consent_marketing','Also send me occasional IdealX news and SMSF guides. <span class="muted">(optional)</span>')}
+  <div class="disclaimer"><p><b>Before you get started.</b> ${CONSENT_TEXT}</p><p class="small muted">We handle your details under the <a href="https://www.idealx.com/legal" target="_blank" rel="noopener">IdealX Privacy Policy</a>. We never sell your data.</p></div>
+  <div class="actions"><button class="btn ghost" data-act="go" data-to="landing">Back</button><div class="right"><button class="btn primary" data-act="complete" data-step="consent" data-next="fund">${assisted?'Get started and pick a time':'Get started'}</button></div></div>
   </div>`;
 }
 function fundStep(){
@@ -607,9 +608,9 @@ function renderDrawer(){
   let body='';
   if(tab==='flow'){
     body=`<div class="status-line"><span class="pill ${ {new:'',in_progress:'accent',saved:'warn',booked:'good',callback:'good',abandoned:'bad',submitted:'good'}[state.progress.status]||''}">${state.progress.status.replace('_',' ')}</span><span class="muted">step: <b class="mono">${state.progress.step}</b></span>${state.lead.id?`<span class="muted mono small">${state.lead.id}</span>`:''}</div>
-    <div class="journey"><b>1 · Self-serve</b><div class="steps">Landing → contact + consent → fund → trustee → members → banking → review → submitted. Hands off to secure onboarding for TFN and ID.</div></div>
+    <div class="journey"><b>1 · Self-serve</b><div class="steps">Landing → contact + Get started → fund → trustee → members → banking → review → submitted. Hands off to secure onboarding for TFN and ID.</div></div>
     <div class="journey"><b>2 · Assisted tap-out</b><div class="steps">Any step → "Save &amp; get help" → book a slot, callback, or resume link. Partial record is submitted to the CRM with what's done.</div></div>
-    <div class="journey"><b>3 · Abandon and re-engage</b><div class="steps">Consent on screen one. Leaving the tab, closing the page, or 45 s idle after consent fires an abandonment event and enrols the lead in the nurture sequence.</div></div>
+    <div class="journey"><b>3 · Abandon and re-engage</b><div class="steps">A disclaimer above the Get started button on screen one gives consent to follow up. Leaving the tab, closing the page, or 45 s idle after consent fires an abandonment event and enrols the lead in the nurture sequence.</div></div>
     <div class="stack tight"><div class="eyebrow">Demo controls</div>
     <div class="row"><button class="btn sm" data-act="demo-fill">Fill with example data</button><button class="btn sm" data-act="demo-abandon">Simulate abandonment</button><button class="btn sm ghost" data-act="restart">Reset prototype</button></div>
     <div class="row">${['landing','consent','fund','trustee','members','banking','review','done','handoff'].map(s=>`<button class="btn sm ghost" data-act="jump" data-to="${s}">${s}</button>`).join('')}</div></div>
@@ -639,7 +640,8 @@ function demoFill(){
   state.members=[Object.assign(blankMember(),{first:'Priya',last:'Natarajan',dob:'1984-03-12',email:'priya.example@example.com',mobile:'0412 000 123',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'AustralianSuper',rollover_balance:'250_500'}),
     Object.assign(blankMember(),{first:'Daniel',last:'Okafor',dob:'1982-09-30',email:'daniel.example@example.com',mobile:'0433 000 456',addr:{street:'14 Lygon Street',suburb:'Brunswick',state:'VIC',postcode:'3056'},resident:'yes',employer_contrib:'yes',rollover_funds:'Hostplus',rollover_balance:'100_250'})];
   Object.assign(state.banking,{cash_account:'idealx',primary_contact:'0',adviser:'no',contact_method:'phone',contact_time:'morning'});
-  if(!L.id){ L.id=uid('lead'); L.created_at=nowIso(); state.progress.application_id=uid('app'); emit('lead.created',{first:L.first,last:L.last,email:L.email,mobile:L.mobile,consent_contact:true,consent_marketing:true,intent:'self',source:L.source,example:true}); }
+  L.consent={method:'disclaimer_then_get_started',version:CONSENT_VERSION,text:CONSENT_TEXT,at:nowIso()};
+  if(!L.id){ L.id=uid('lead'); L.created_at=nowIso(); state.progress.application_id=uid('app'); emit('lead.created',{first:L.first,last:L.last,email:L.email,mobile:L.mobile,consent_contact:true,consent:L.consent,consent_marketing:true,intent:'self',source:L.source,example:true}); }
   state.progress.completed=['consent','fund','trustee','members','banking']; state.progress.status='in_progress';
   save(); go('review');
 }

@@ -10,14 +10,14 @@ Open `index.html` in any browser. It is one self-contained file: no build step, 
 |---|---|---|
 | **Self-serve** | Comfortable online | Landing → contact + consent → fund → trustee → members → banking → review → submitted. Hands off to the secure IdealX account for TFNs and identity checks. |
 | **Assisted tap-out** | Wants a person | "Save & get help" is on every step. They can book a 30-minute slot, ask for a callback, or get a resume link. A partial record goes to the sales team with what is done so far. |
-| **Abandon and re-engage** | Leaves partway | Screen one asks for consent to follow up. After that, leaving the tab, closing the page, or 45 seconds idle fires an abandonment event and enrols the lead in the nurture sequence. |
+| **Abandon and re-engage** | Leaves partway | Screen one carries a disclaimer above the Get started button; pressing it is consent to follow up. After that, leaving the tab, closing the page, or 45 seconds idle fires an abandonment event and enrols the lead in the nurture sequence. |
 
 "Talk to someone first" on the landing page is the fast path for the second group: it collects contact details and consent, then opens the booking sheet straight away.
 
 ## Screens
 
 1. **Landing.** Headline, two calls to action, what you'll need, and a comparison of individual vs corporate trustees. Shows a "welcome back" banner if there is saved progress.
-2. **Contact + consent.** Name, email, mobile. A required consent to save progress and be contacted if they stop. Optional marketing consent. This creates the lead.
+2. **Contact + Get started.** Name, email, mobile, and an optional marketing tick. A disclaimer sits above the Get started button: pressing it is consent to save progress and be contacted if they stop. The disclaimer text, version and timestamp are stored on the lead. This creates the lead.
 3. **Fund.** Fund name, trustee structure, member count (1–6), existing super, balance range, timeframe. Inline notes explain the single-member rules for each structure.
 4. **Trustee.** Branches on structure. Individual: second trustee details, and relationship if the fund has one member. Corporate: new or existing company, company name or ACN, registered office, confirmation that members are directors.
 5. **Members.** One card per member, prefilled from earlier answers. Name, date of birth, address, contact details, tax residency, employer contributions, rollover funds. No TFN, no ID upload.
@@ -54,7 +54,7 @@ The prototype stores state in the browser only. In production each event is a `P
 
 | Event | Fired when | Sales/nurture action |
 |---|---|---|
-| `lead.created` | Consent screen completed | Create lead with source (UTM, gclid, fbclid) and intent (self / assisted) |
+| `lead.created` | Get started pressed on the contact screen | Create lead with source (UTM, gclid, fbclid) and intent (self / assisted) |
 | `step.completed` | Any form section completed | Update progress on the lead |
 | `nudge.shown` | 45 s idle on a form step | Reporting only |
 | `session.abandoned` | Tab hidden, page closed, or demo button | Set status `abandoned`, start nurture sequence |
