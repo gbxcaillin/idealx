@@ -116,6 +116,10 @@ Stops on submit, booking, completed callback, STOP or unsubscribe, or three unan
 
 The Board notes drawer has a **Launch checklist** tab listing the policy and production items that must be settled before ad spend starts: advice boundary and consultant scripts, ad platform verification, calling rules, bot protection, keeping sensitive fields out of the CRM, pixel placement, retention, duplicates, speed to lead, qualification policy, a real calendar, minors, deed provider mapping, accessibility, offline conversions and field-level analytics. The full hazards table with mitigations and status is in the SMSF Start Information Flow doc.
 
+## Privacy policy
+
+The contact screen links to the Idealx Privacy Policy at https://legal.idealx.com/agreements/privacy and names the collecting entity, overseas processing and the support@idealx.com contact for access, correction and marketing opt-out. At the time of writing that policy is Version 3.0, marked Draft and unpublished; it must be published before launch and should mention SMS and phone contact about saved applications, notice to people named by an applicant, lead retention, and the CRM and SMS vendors in the Overseas Handling Register.
+
 ## Deliberately out of scope on this page
 
 - Tax file numbers and identity documents. These are collected inside the secure IdealX account after hand-off, which keeps the ad landing page low-risk.

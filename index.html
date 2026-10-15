@@ -600,7 +600,7 @@ function consent(){
   <div class="grid2">${field('lead.email','Email',{type:'email',ac:'email',im:'email',req:true})}${field('lead.mobile','Mobile',{type:'tel',ac:'tel',im:'tel',ph:'04xx xxx xxx',req:true})}</div>
   <p class="optnote">These are the only details we need from you. Everything after this page is optional, and a consultant can complete it with you.</p>
   ${check('lead.consent_marketing','Also send me occasional IdealX news and SMSF guides. <span class="muted">(optional)</span>')}
-  <div class="disclaimer"><p><b>Before you get started.</b> ${CONSENT_TEXT}</p><p class="small muted">We handle your details under the <a href="https://www.idealx.com/legal" target="_blank" rel="noopener">IdealX Privacy Policy</a>. We never sell your data.</p></div>
+  <div class="disclaimer"><p><b>Before you get started.</b> ${CONSENT_TEXT}</p><p class="small muted">Idealx Platform Pty Ltd collects these details to assess and set up your fund, under the <a href="https://legal.idealx.com/agreements/privacy" target="_blank" rel="noopener">Idealx Privacy Policy</a>. Some service providers process information outside Australia, as the policy describes. You can ask to see or correct your details, or opt out of marketing, at support@idealx.com. We never sell your data.</p></div>
   <div class="actions"><button class="btn ghost" data-act="go" data-to="landing">Back</button><div class="right"><button class="btn primary" data-act="complete" data-step="consent" data-next="fund">${assisted?'Get started and pick a time':'Get started'}</button></div></div>
   </div>`;
 }
@@ -869,6 +869,7 @@ function renderDrawer(){
       ['Timezones and calendar','Slots generated in Melbourne time with local equivalents (built here); real calendar with round-robin availability behind it.'],
       ['Declarations','Applicant makes the declarations themselves via a confirm link when a consultant completes the form (built here).'],
       ['Minors','Under-18 members with a guardian trustee are out of scope for launch; say so or build it.'],
+      ['Privacy policy','The policy at legal.idealx.com is Version 3.0 marked Draft and unpublished. Publish it before launch; add SMS and phone contact for saved applications, a note for people named by an applicant, lead retention (90 days unconverted), and list the CRM and SMS vendors in the Overseas Handling Register. Fix the complaints address typo (complains@).'],
       ['Deed provider mapping','Map every field to the chosen provider\'s order form; add title, gender or occupation if their form needs them.'],
       ['Accessibility','Tooltips linked to fields for screen readers (built here); full keyboard pass; colour contrast check on every theme.'],
       ['Offline conversions','Send application_submitted and call_booked back to Google and Meta with the stored click IDs (payload built here).'],
