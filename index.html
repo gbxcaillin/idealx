@@ -274,6 +274,7 @@ body.drawer-open main,body.drawer-open .top-in,body.drawer-open footer .in{max-w
     <a class="wordmark" href="#" id="home">IDEALX <span>SMSF Start</span></a>
     <div class="spacer"></div>
     <button class="btn sm" id="helpBtn" hidden>Save &amp; get help</button>
+    <button class="btn sm ghost" id="freshBtn" hidden title="Owner only: clear everything on this device">Start fresh</button>
     <button class="btn sm ghost" id="notesBtn" aria-controls="drawer">Board notes</button>
   </div>
   <div class="progress" id="progress" hidden><i style="width:0"></i></div>
@@ -795,6 +796,10 @@ function renderOverlay(){
     body=`<div class="sh"><div><div class="eyebrow">Callback</div><h3 style="margin-top:6px">We'll call ${esc(state.lead.mobile)}</h3><p class="small muted">${melOpenNow()?'Usually within the hour during business hours, 9am to 5pm Melbourne time.':'It\'s outside business hours in Melbourne right now. We\'ll call from 9am on the next business day.'} If we miss you, we try again and send an SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
     ${select('banking.contact_time','Best time',[['now',melOpenNow()?'As soon as someone\'s free':'First thing next business day'],['morning','Morning (9 to 12)'],['midday','Midday (12 to 2)'],['afternoon','Afternoon (2 to 5)']])}
     <button class="btn primary full" data-act="confirm-callback">Request a callback</button>`;
+  } else if(v==='fresh'){
+    body=`<div class="sh"><div><div class="eyebrow">Owner controls</div><h3 style="margin-top:6px">Clear everything and start fresh?</h3><p class="small muted">Removes the saved application, the event log, the theme choice and any trust-section copy edits on this device. The published prototype itself is unchanged.</p></div><button class="btn sm ghost" data-act="help-close" aria-label="Close">✕</button></div>
+    <button class="btn primary full" data-act="fresh-confirm">Clear and start fresh</button>
+    <div class="row" style="justify-content:space-between"><button class="btn sm ghost" data-act="help-close">Cancel</button><button class="btn sm ghost" data-act="owner-hide">Hide owner controls</button></div>`;
   } else if(v==='link'){
     body=`<div class="sh"><div><div class="eyebrow">Finish later</div><h3 style="margin-top:6px">We'll email a link to ${esc(state.lead.email)}</h3><p class="small muted">It opens this application exactly where you left it, after a code to your mobile so nobody else can read it. If you don't come back within a day, a specialist checks in by SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
     <button class="btn primary full" data-act="confirm-link">Send the link</button>`;
@@ -845,7 +850,7 @@ function renderDrawer(){
     <div class="stack tight"><div class="eyebrow">Demo controls</div>
     <div class="row"><button class="btn sm" data-act="demo-fill">Fill with example data</button><button class="btn sm" data-act="demo-abandon">Simulate abandonment</button><button class="btn sm ${state.ui.consultant?'primary':''}" data-act="consultant-toggle">${state.ui.consultant?'Exit consultant mode':'Consultant mode'}</button><button class="btn sm ghost" data-act="restart">Reset prototype</button></div>
     <div class="row">${['landing','consent','verify','fund','trustee','members','banking','review','done','handoff'].map(s=>`<button class="btn sm ghost" data-act="jump" data-to="${s}">${s}</button>`).join('')}</div></div>
-    <div class="small muted">Example data is marked as such in the record and is never a real person.</div>`;
+    <div class="small muted">Example data is marked as such in the record and is never a real person. Owner only: tap the IDEALX wordmark five times to reveal a "Start fresh" button that wipes everything on this device, including theme and copy edits.</div>`;
   } else if(tab==='check'){
     const C=[
       ['Advice boundary','Consultant scripts stay factual; general advice warning on the page; who may give personal advice under the AFSL and with what documents; calls recorded.'],
@@ -974,6 +979,8 @@ document.addEventListener('click',e=>{
     case 'confirm-callback': finishHandoff('callback',{preferred_time:state.banking.contact_time,mobile:state.lead.mobile}); break;
     case 'confirm-link': finishHandoff('saved',{resume_link_sent_to:state.lead.email}); break;
     case 'nudge-close': hideNudge(); break;
+    case 'fresh-confirm': startFresh(); break;
+    case 'owner-hide': lockOwner(); closeHelp(); break;
     case 'notes-close': drawerOpen=false; renderDrawer(); break;
     case 'notes-tab': state.ui.notesTab=t.dataset.tab; renderDrawer(); break;
     case 'reset-copy': copyEdits={}; try{ localStorage.removeItem(COPY_KEY); }catch(err){} render(); renderDrawer(); break;
@@ -986,8 +993,23 @@ document.addEventListener('click',e=>{
 function nextIncomplete(){ for(const s of FORM_STEPS) if(!state.progress.completed.includes(s)) return s; return 'review'; }
 $('#helpBtn').addEventListener('click',()=>{ hideNudge(); openHelp('menu'); });
 $('#notesBtn').addEventListener('click',()=>{ drawerOpen=!drawerOpen; renderDrawer(); });
-$('#home').addEventListener('click',e=>{ e.preventDefault(); go('landing'); });
+$('#home').addEventListener('click',e=>{ e.preventDefault(); homeTaps++; clearTimeout(homeTapTimer); homeTapTimer=setTimeout(()=>{ homeTaps=0; },2500); if(homeTaps>=5){ homeTaps=0; if(!ownerOn()) unlockOwner(); } go('landing'); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(state.ui.helpView) closeHelp(); else if(drawerOpen){ drawerOpen=false; renderDrawer(); } } });
+
+/* ---------- owner controls (hidden until the wordmark is tapped 5 times) ---------- */
+const OWNER_KEY='idealx.owner';
+let homeTaps=0, homeTapTimer=null;
+function ownerOn(){ try{ return localStorage.getItem(OWNER_KEY)==='1'; }catch(e){ return false; } }
+function showOwner(){ $('#freshBtn').hidden=!ownerOn(); }
+function unlockOwner(){ try{ localStorage.setItem(OWNER_KEY,'1'); }catch(e){} showOwner(); $('#nudge').innerHTML=`<div class="nudge" role="status"><p><b>Owner controls on.</b> "Start fresh" now sits in the header on this device.</p><button class="btn sm ghost" data-act="nudge-close" aria-label="Dismiss">✕</button></div>`; }
+function lockOwner(){ try{ localStorage.removeItem(OWNER_KEY); }catch(e){} showOwner(); }
+function startFresh(){
+  try{ [STORE_KEY,BRAND_KEY,COPY_KEY].forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  clearTimeout(leaveTimer); clearTimeout(idleTimer); helpDay=null;
+  state=fresh(); events=[]; copyEdits={}; drawerOpen=false; renderDrawer();
+  delete document.documentElement.dataset.brand; renderThemeBar(); captureSource(); hideNudge(); state.ui.helpView=null; renderOverlay(); go('landing');
+}
+$('#freshBtn').addEventListener('click',()=>{ state.ui.helpView='fresh'; renderOverlay(); });
 
 /* ---------- boot ---------- */
 function start(){
@@ -995,7 +1017,7 @@ function start(){
   try{ const b=localStorage.getItem(BRAND_KEY); if(b&&THEMES.some(t=>t.key===b)) applyBrand(b); else renderThemeBar(); }catch(e){ renderThemeBar(); }
   if(!['landing','done','handoff'].includes(state.progress.step)) state.progress.step='landing';
   if(state.progress.status==='abandoned') emit('session.returned',{via:'direct',nurture:'paused'});
-  render();
+  showOwner(); render();
 }
 if(window.claude&&window.claude.hot&&window.claude.hot.ready){ window.claude.hot.ready(start); } else { start(); }
 })();

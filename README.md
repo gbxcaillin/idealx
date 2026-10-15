@@ -48,7 +48,9 @@ Between the hero and the "what you'll need" card the landing page has a slot for
 
 The "Board notes" button opens a side panel for reviewers:
 
-- **Flow.** Current status, the three journeys, demo controls (fill with example data, simulate abandonment, reset, jump to any screen).
+- **Flow.** Current status, the journeys, demo controls (fill with example data, simulate abandonment, consultant mode, reset, jump to any screen).
+
+Owner only: tap the IDEALX wordmark five times to reveal a "Start fresh" button in the header. It clears the saved application, event log, theme choice and copy edits on that device after a confirmation, and stays visible on that device until hidden from its own sheet.
 - **Theme.** The four palettes with hex tokens, and a reset for trust-section copy edits.
 - **Events.** Every event the page would send to the CRM, as JSON, newest first. An optional webhook URL field POSTs them for real.
 - **Record.** The lead and application record as it would be stored.
