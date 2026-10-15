@@ -29,7 +29,7 @@ Open `index.html` in any browser. It is one self-contained file: no build step, 
 
 ## Brand theme switcher
 
-Colour tokens and fonts were read from idealx.com's stylesheet (its `:root` custom properties) on 14 October 2026. Type in every theme matches the site: Instrument Serif for headings, Inter for body, the system monospace for data. Radii are the site's 10 / 14 / 24px.
+Colour tokens and fonts were read from idealx.com's stylesheet (its `:root` custom properties) on 14 October 2026. Type and treatment in every theme match the site: Inter headlines (light weight) with one accent word in Instrument Serif underlined in indigo, an eyebrow of indigo code, thin rule and grey label, black pill buttons with an arrow, borderless cloud-grey cards with the site's 24px radius, and a dark footer band with an indigo top rule and small-caps column headings. The system monospace is used for data.
 
 A bar at the top lets reviewers switch the whole prototype between four palettes; the choice is remembered in the browser. With no choice made, the page follows the viewer's light or dark setting. The **Theme** tab in Board notes lists each palette's tokens.
 

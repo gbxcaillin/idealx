@@ -6,7 +6,7 @@
 <title>IdealX SMSF Start</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap">
 <style>
 /* Layout: one narrow column of form steps on the website's white page, ink text, indigo as the single accent, a board-notes drawer docking on the right at desktop width. */
 /* Tokens read from idealx.com's stylesheet (:root --indigo, --ink, --slate, --mist, --cloud, --indigo-tint, --radius). Values marked "derived" are not on the site and were built from those. */
@@ -19,6 +19,7 @@
   --body:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
   --radius:10px; --radius-lg:14px; --radius-xl:24px; --shadow:0 20px 60px rgba(13,13,15,.18);
+  --foot-bg:#0d0d0f; --foot-bg-2:#16161a; --foot-fg:#ffffff; --foot-muted:#a3a3aa; --foot-line:#ffffff24;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
@@ -47,14 +48,18 @@
 [hidden]{display:none!important}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
-h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.05;margin:0;text-wrap:balance;letter-spacing:-.005em}
-h1{font-size:clamp(2.4rem,6.5vw,4rem)}
-h2{font-size:clamp(1.8rem,4vw,2.5rem)}
-h3{font-size:1.4rem}
+h1,h2,h3{font-family:var(--body);font-weight:400;line-height:1.04;margin:0;text-wrap:balance;letter-spacing:-.03em}
+h1{font-size:clamp(2.5rem,6vw,4.1rem);font-weight:300}
+h2{font-size:clamp(1.9rem,4.2vw,2.8rem);font-weight:300}
+h3{font-size:1.45rem;letter-spacing:-.02em}
+h1 em,h2 em,h3 em{font-family:var(--display);font-style:normal;font-size:1.06em;letter-spacing:0;text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:.09em;text-underline-offset:.14em}
+h3 em{text-decoration:none}
 p{margin:0}
 a{color:var(--accent-strong)}
 button{font:inherit;color:inherit;cursor:pointer}
-.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.eyebrow{display:flex;align-items:center;gap:12px;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.eyebrow b{color:var(--accent);font-weight:500;letter-spacing:.18em;font-variant-numeric:tabular-nums}
+.eyebrow i{display:inline-block;width:40px;height:1px;background:var(--accent);opacity:.55;flex:none}
 .muted{color:var(--muted)}
 .small{font-size:.875rem}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
@@ -66,10 +71,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .wordmark span{color:var(--muted);letter-spacing:0;font-weight:400;margin-left:10px;font-size:.85rem}
 .top .spacer{flex:1}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);font-weight:500;text-decoration:none;white-space:nowrap}
-.btn:hover{border-color:var(--accent)}
+.btn:hover{border-color:var(--fg)}
+.btn{border-radius:12px}
 .btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.choice:focus-within,.slot:focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-.btn.primary:hover{background:var(--accent-strong)}
+.btn.primary{background:var(--fg);border-color:var(--fg);color:var(--bg);border-radius:12px;padding:0 20px}
+.btn.primary:hover{background:var(--fg);opacity:.86;border-color:var(--fg)}
+.btn.primary::after{content:'\2192';font-weight:400;margin-left:2px}
+.btn.primary.noarrow::after{content:none}
 .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
 .btn.ghost:hover{color:var(--fg);border-color:var(--line)}
 .btn.sm{min-height:36px;padding:0 12px;font-size:.875rem}
@@ -90,7 +98,7 @@ main{padding-block:28px 96px;padding-left:max(16px,env(safe-area-inset-left,0px)
 .stack{display:grid;gap:16px}
 .stack.tight{gap:10px}
 .lede{font-size:1.1rem;color:var(--muted);max-width:60ch}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:20px}
+.card{background:var(--surface-2);border:0;border-radius:var(--radius-xl);padding:24px}
 .card.quiet{background:transparent}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .row > *{min-width:0}
@@ -101,7 +109,9 @@ main{padding-block:28px 96px;padding-left:max(16px,env(safe-area-inset-left,0px)
 hr{border:0;border-top:1px solid var(--line);margin:0}
 
 /* Landing */
-.hero{display:grid;gap:22px;padding-block:24px 8px}
+.hero{display:grid;gap:22px;padding-block:28px 8px}
+@media (min-width:900px){.hero{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);column-gap:48px;align-items:center}.hero .eyebrow{grid-column:1/-1}.hero h1{grid-row:span 3}.hero .hero-right{display:grid;gap:18px}}
+.hero .hero-right{display:grid;gap:18px}
 .hero .ctas{display:flex;gap:12px;flex-wrap:wrap}
 .points{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .point{border-top:1px solid var(--line-strong);padding-top:14px;display:grid;gap:6px}
@@ -111,8 +121,19 @@ hr{border:0;border-top:1px solid var(--line);margin:0}
 .compare th,.compare td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 .compare th{color:var(--muted);font-weight:500;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
 .tablewrap{overflow-x:auto}
-footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;padding-block:20px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-footer .in{max-width:1100px;margin:0 auto;display:grid;gap:8px}
+footer{background:linear-gradient(180deg,var(--foot-bg-2),var(--foot-bg));border-top:3px solid var(--accent);color:var(--foot-muted);font-size:.85rem;padding-block:44px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+footer .in{max-width:1100px;margin:0 auto;display:grid;gap:36px}
+footer .fg{display:grid;gap:32px}
+@media (min-width:860px){footer .fg{grid-template-columns:1.4fr 1fr 1fr 1fr}}
+footer .fh{color:var(--foot-fg);font-family:var(--body);font-weight:300;font-size:clamp(2rem,4.5vw,3rem);letter-spacing:-.03em;line-height:1.05;margin-top:18px;max-width:14ch;text-wrap:balance}
+footer .fh em{font-family:var(--display);font-style:normal;font-size:1.06em;letter-spacing:0}
+footer .fk{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--foot-muted);font-weight:500;margin-bottom:14px}
+footer ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+footer a{color:var(--foot-fg);text-decoration:none}
+footer a:hover{color:var(--accent-strong)}
+footer li span{color:var(--foot-muted)}
+footer .legal{display:grid;gap:8px;font-size:.78rem;border-top:1px solid var(--foot-line);padding-top:20px}
+.mark{width:26px;height:26px;flex:none}
 
 /* Form fields */
 .f{display:grid;gap:6px}
@@ -121,28 +142,30 @@ footer .in{max-width:1100px;margin:0 auto;display:grid;gap:8px}
 .f .err{display:none;font-size:.8rem;color:var(--bad)}
 .f.has-err .err{display:block}
 .f.has-err input,.f.has-err select,.f.has-err textarea,.f.has-err .choices{border-color:var(--bad)}
-input,select,textarea{width:100%;min-height:46px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);font:inherit}
+input,select,textarea{width:100%;min-height:46px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit}
+input:hover,select:hover,textarea:hover{border-color:var(--line-strong)}
 textarea{min-height:90px;resize:vertical}
 input::placeholder{color:var(--muted)}
 select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}
 .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;border:1px solid transparent;border-radius:var(--radius-lg)}
 .choices.inline{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
-.choice{position:relative;display:grid;gap:4px;padding:14px;border:1px solid var(--line-strong);border-radius:var(--radius-lg);background:var(--surface);cursor:pointer}
+.choice{position:relative;display:grid;gap:4px;padding:16px;border:1px solid transparent;border-radius:var(--radius-lg);background:var(--surface-2);cursor:pointer}
 .choice input{position:absolute;opacity:0;width:1px;height:1px;min-height:0}
 .choice b{font-weight:600}
 .choice span{font-size:.85rem;color:var(--muted)}
 .choice:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
 .choice:has(input:checked) b::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle}
-.check{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line-strong);border-radius:var(--radius-lg);background:var(--surface);cursor:pointer}
+.check{display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid transparent;border-radius:var(--radius-lg);background:var(--surface-2);cursor:pointer}
 .check input{width:20px;height:20px;min-height:0;margin:2px 0 0;flex:none;accent-color:var(--accent)}
 .check.has-err{border-color:var(--bad)}
 .check .err{display:none}
 .check.has-err .err{display:block;font-size:.8rem;color:var(--bad)}
-.disclaimer{display:grid;gap:8px;padding:14px 16px;border-radius:var(--radius-lg);background:var(--surface-2);border:1px solid var(--line);font-size:.92rem;line-height:1.5}
+.disclaimer{display:grid;gap:8px;padding:18px 20px;border-radius:var(--radius-xl);background:var(--surface-2);border:0;font-size:.92rem;line-height:1.5}
 .disclaimer b{font-weight:600}
 .section-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.member{border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px;display:grid;gap:14px;background:var(--surface)}
+.member{border:0;border-radius:var(--radius-xl);padding:22px;display:grid;gap:14px;background:var(--surface-2)}
 .member .mh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.member h3{font-weight:400}
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;letter-spacing:.04em;padding:4px 10px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);text-transform:uppercase}
 .pill.accent{color:var(--accent-strong);border-color:var(--accent)}
 .pill.good{color:var(--good);border-color:var(--good)}
@@ -171,8 +194,8 @@ ol.next{margin:0;padding-left:20px;display:grid;gap:8px}
 .sheet{background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:grid;gap:18px;box-shadow:var(--shadow)}
 @media (min-width:640px){.sheet{border-radius:var(--radius-xl);padding-left:24px;padding-right:24px}}
 .sheet .sh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.opt{display:grid;gap:4px;text-align:left;padding:16px;border:1px solid var(--line-strong);border-radius:var(--radius-lg);background:var(--surface-2);width:100%}
-.opt:hover{border-color:var(--accent)}
+.opt{display:grid;gap:4px;text-align:left;padding:18px;border:1px solid transparent;border-radius:var(--radius-lg);background:var(--surface-2);width:100%}
+.opt:hover{border-color:var(--fg)}
 .opt b{font-weight:600}
 .opt span{font-size:.875rem;color:var(--muted)}
 .days{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
@@ -209,7 +232,7 @@ ol.next{margin:0;padding-left:20px;display:grid;gap:8px}
 .whywho h3{margin-bottom:6px}
 .whywho ul{margin:0;padding-left:18px;display:grid;gap:6px}
 .signals{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.signal{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:3px;background:var(--surface)}
+.signal{border:0;border-radius:var(--radius-lg);padding:14px 16px;display:grid;gap:3px;background:var(--surface-2)}
 .signal .k{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .signal .v{font-weight:500;font-size:.95rem;overflow-wrap:anywhere}
 .tbd{color:var(--muted)}
@@ -271,7 +294,7 @@ body.drawer-open main,body.drawer-open .top-in,body.drawer-open footer .in{max-w
 <div class="themebar" id="themebar"><div class="themebar-in"><span class="tl">Theme</span><span id="themeBtns"></span><span class="td" id="themeDesc"></span></div></div>
 <header class="top">
   <div class="top-in">
-    <a class="wordmark" href="#" id="home">IDEALX <span>SMSF Start</span></a>
+    <a class="wordmark" href="#" id="home" style="display:inline-flex;align-items:center;gap:10px"><svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect x="0" y="0" width="11" height="26" rx="3" fill="#5158f6"/><rect x="13" y="0" width="13" height="12" rx="3" fill="currentColor"/><rect x="13" y="14" width="13" height="12" rx="3" fill="currentColor"/></svg>IDEALX <span>SMSF Start</span></a>
     <div class="spacer"></div>
     <button class="btn sm" id="helpBtn" hidden>Save &amp; get help</button>
     <button class="btn sm ghost" id="freshBtn" hidden title="Owner only: clear everything on this device">Start fresh</button>
@@ -282,8 +305,16 @@ body.drawer-open main,body.drawer-open .top-in,body.drawer-open footer .in{max-w
 <div class="stepline" id="stepline" hidden></div>
 <main id="app" aria-live="polite"></main>
 <footer><div class="in">
-  <div>Idealx Platform Pty Ltd (ABN 83 694 912 126) is a Corporate Authorised Representative of Idealx Securities Limited (AFSL 531729). This page collects details to set up a self-managed super fund. It is general information only and does not take your personal circumstances into account.</div>
-  <div>Prototype for board review. Nothing entered here is sent anywhere unless a webhook is configured in Board notes.</div>
+  <div class="fg">
+    <div style="color:#fff"><svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect x="0" y="0" width="11" height="26" rx="3" fill="#5158f6"/><rect x="13" y="0" width="13" height="12" rx="3" fill="currentColor"/><rect x="13" y="14" width="13" height="12" rx="3" fill="currentColor"/></svg><div class="fh">Where your self-managed fund <em>lives</em>.</div></div>
+    <div><div class="fk">The platform</div><ul><li><a href="https://www.idealx.com/" target="_blank" rel="noopener">Home</a></li><li><span>Portal</span></li><li><span>Console</span></li><li><span>Atlas AI</span></li></ul></div>
+    <div><div class="fk">Company</div><ul><li><span>Journal</span></li><li><a href="https://www.idealx.com/contact" target="_blank" rel="noopener">Contact</a></li></ul></div>
+    <div><div class="fk">Legal</div><ul><li><span>Financial Services Guide</span></li><li><span>Client Services Agreement</span></li><li><span>Fee Schedule</span></li><li><a href="https://legal.idealx.com/agreements/privacy" target="_blank" rel="noopener">Privacy Policy</a></li></ul></div>
+  </div>
+  <div class="legal">
+    <div>Idealx Platform Pty Ltd (ABN 83 694 912 126) is a Corporate Authorised Representative of Idealx Securities Limited (AFSL 531729). This page collects details to set up a self-managed super fund. It is general information only and does not take your personal circumstances into account.</div>
+    <div>Prototype for board review. Nothing entered here is sent anywhere unless a webhook is configured in Board notes.</div>
+  </div>
 </div></footer>
 <div id="overlay"></div>
 <div id="nudge"></div>
@@ -528,11 +559,11 @@ function landing(){
   return `<div class="col wide">
   ${resumable?`<div class="resume"><div><b>Welcome back, ${esc(state.lead.first)}.</b> <span class="muted">You've completed ${completedSections().length} of 6 sections. We saved everything.</span></div><div class="row"><button class="btn sm ghost" data-act="restart">Start over</button><button class="btn sm primary" data-act="resume">Continue where I left off</button></div></div>`:''}
   <section class="hero">
-    <div class="eyebrow">Self-managed super, set up properly</div>
-    <h1>Start your SMSF application in about fifteen minutes. Hand it to a person at any point.</h1>
-    <p class="lede">Tell us who's in the fund and how you want it run. Do it all yourself, or stop wherever you like and a specialist picks it up with you on the phone. Nothing you enter is lost.</p>
+    <div class="eyebrow"><b>SMSF</b><i></i>Self-managed super, set up properly</div>
+    <h1>Start your SMSF application in about fifteen minutes. Hand it to a <em>person</em> at any point.</h1>
+    <div class="hero-right"><p class="lede">Tell us who's in the fund and how you want it run. Do it all yourself, or stop wherever you like and a specialist picks it up with you on the phone. Nothing you enter is lost.</p>
     <div class="ctas"><button class="btn primary" data-act="start">Start setting up my fund</button><button class="btn" data-act="talk">Talk to someone first</button></div>
-    <div class="small muted">No tax file numbers or ID documents on this page. Those happen inside your secure IdealX account.</div>
+    <div class="small muted">No tax file numbers or ID documents on this page. Those happen inside your secure IdealX account.</div></div>
     <div class="links-row"><a href="https://www.idealx.com/" target="_blank" rel="noopener">Already have an SMSF? Move it to IdealX</a><a href="https://www.idealx.com/contact" target="_blank" rel="noopener">I'm an adviser or accountant</a></div>
   </section>
   <section class="trust" aria-label="About IdealX">
@@ -594,7 +625,7 @@ function landing(){
 function consent(){
   const assisted=state.lead.intent==='assisted';
   return `<div class="col">
-  <div class="stack"><div class="eyebrow">Before we begin</div><h2>${assisted?'Where should we call you?':'Where can we reach you?'}</h2>
+  <div class="stack"><div class="eyebrow"><b>00</b><i></i>Before we begin</div><h2>${assisted?'Where should we <em>call</em> you?':'Where can we <em>reach</em> you?'}</h2>
   <p class="lede">${assisted?'Leave your details and pick a time. We hold your place while you choose.':'We save your progress against these details so you can finish any time, on any device.'}</p></div>
   <div class="grid2">${field('lead.first','First name',{ac:'given-name',req:true})}${field('lead.last','Last name',{ac:'family-name',req:true})}</div>
   <div class="grid2">${field('lead.email','Email',{type:'email',ac:'email',im:'email',req:true})}${field('lead.mobile','Mobile',{type:'tel',ac:'tel',im:'tel',ph:'04xx xxx xxx',req:true})}</div>
@@ -608,7 +639,7 @@ function fundStep(){
   const n=Number(state.fund.member_count);
   const tip=state.fund.structure==='individual'&&n===1?`<div class="note">A single-member fund with individual trustees needs a second trustee who isn't a member. That's often a partner or adult child. We'll ask about them next.</div>`:state.fund.structure==='corporate'?`<div class="note">With a corporate trustee, every member becomes a director of the trustee company. ${n===1?'A single-member fund can have you as sole director.':''}</div>`:'';
   return `<div class="col">
-  <div class="stack"><div class="eyebrow">Section 1 of 5</div><h2>Your fund</h2><p class="lede">The basics we need before anything can be drafted.</p>${OPTNOTE}<p class="small muted">General information only. IdealX doesn't know your circumstances and nothing on this page is personal financial advice. A licensed adviser can tell you whether an SMSF suits you.</p></div>
+  <div class="stack"><div class="eyebrow"><b>01</b><i></i>Section 1 of 5</div><h2>Your <em>fund</em></h2><p class="lede">The basics we need before anything can be drafted.</p>${OPTNOTE}<p class="small muted">General information only. IdealX doesn't know your circumstances and nothing on this page is personal financial advice. A licensed adviser can tell you whether an SMSF suits you.</p></div>
   ${field('fund.name','Fund name',{ph:'The '+(state.lead.last||'Smith')+' Superannuation Fund',hint:'Most people use their family name. It can be changed before the deed is prepared.'})}
   ${choices('fund.structure','Trustee structure',[['individual','Individual trustees','Two to six people. Every member is a trustee. Lower set-up cost.'],['corporate','Corporate trustee','A company acts as trustee. Easier when members change or the fund holds property.']],{rerender:true,hint:'Not sure? Choose one; it can be changed on a call before the deed is drafted.'})}
   ${choices('fund.member_count','How many members?',[['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6']],{inline:true,rerender:true,hint:'Members are the people whose super goes into the fund. Up to six.'})}
@@ -624,10 +655,10 @@ function trusteeStep(){
   const n=Number(state.fund.member_count), t=state.trustee, indiv=state.fund.structure==='individual';
   let body='';
   if(!state.fund.structure){
-    body=`<div class="stack"><div class="eyebrow">Section 2 of 5</div><h2>Trustee</h2><p class="lede">You haven't chosen a trustee structure yet. Pick one here, or skip it and a consultant will walk you through the choice.</p>${OPTNOTE}</div>
+    body=`<div class="stack"><div class="eyebrow"><b>02</b><i></i>Section 2 of 5</div><h2>Choose a <em>trustee</em> structure</h2><p class="lede">You haven't chosen a trustee structure yet. Pick one here, or skip it and a consultant will walk you through the choice.</p>${OPTNOTE}</div>
     ${choices('fund.structure','Trustee structure',[['individual','Individual trustees','Two to six people. Every member is a trustee. Lower set-up cost.'],['corporate','Corporate trustee','A company acts as trustee. Easier when members change or the fund holds property.']],{rerender:true})}`;
   } else if(indiv){
-    body=`<div class="stack"><div class="eyebrow">Section 2 of 5</div><h2>Your second trustee</h2><p class="lede">You're trustee one. ${n>=2?'Every member is also a trustee, so tell us about the second member here and the rest in the next step.':'Because the fund has one member, the second trustee is someone who is not a member. They can\'t be your employer unless they are also a relative.'}</p>${OPTNOTE}</div>
+    body=`<div class="stack"><div class="eyebrow"><b>02</b><i></i>Section 2 of 5</div><h2>Your second <em>trustee</em></h2><p class="lede">You're trustee one. ${n>=2?'Every member is also a trustee, so tell us about the second member here and the rest in the next step.':'Because the fund has one member, the second trustee is someone who is not a member. They can\'t be your employer unless they are also a relative.'}</p>${OPTNOTE}</div>
     <div class="grid3">${field('trustee.second.first','First name',{ac:'off'})}${field('trustee.second.middle','Middle name(s)',{ac:'off'})}${field('trustee.second.last','Last name',{ac:'off'})}</div>
     <div class="grid2">${field('trustee.second.dob','Date of birth',{type:'date'})}${select('trustee.second.relationship','Relationship to you',[['spouse','Spouse or partner'],['family','Family member'],['business','Business partner'],['friend','Friend'],['other','Other']])}</div>
     <div class="grid2">${field('trustee.second.email','Email',{type:'email',im:'email'})}${field('trustee.second.mobile','Mobile',{type:'tel',im:'tel',ph:'04xx xxx xxx'})}</div>
@@ -637,7 +668,7 @@ function trusteeStep(){
     ${inviteRow('trustee.second',t.second)}
     <div class="note">We'll email them to confirm they agree to act as trustee. They complete their own identity check later, inside the secure account.</div>`;
   } else {
-    body=`<div class="stack"><div class="eyebrow">Section 2 of 5</div><h2>The trustee company</h2><p class="lede">A special-purpose company whose only job is to act as trustee of this fund.</p>${OPTNOTE}</div>
+    body=`<div class="stack"><div class="eyebrow"><b>02</b><i></i>Section 2 of 5</div><h2>The trustee <em>company</em></h2><p class="lede">A special-purpose company whose only job is to act as trustee of this fund.</p>${OPTNOTE}</div>
     ${choices('trustee.company_mode','Do you have a company to use?',[['new','Register a new company','We set up a special-purpose trustee company for you.'],['existing','Use an existing company','It must act only as trustee of this fund.']],{rerender:true})}
     ${t.company_mode?`<div class="grid2">${field('trustee.company_name',t.company_mode==='new'?'Proposed company name':'Company name',{ph:t.company_mode==='new'?(state.lead.last||'Smith')+' Super Pty Ltd':'',hint:t.company_mode==='new'?'We check availability with ASIC before registering.':''})}${t.company_mode==='existing'?field('trustee.acn','ACN',{im:'numeric',max:11,ph:'123 456 789'}):''}</div>`:''}
     ${t.company_mode==='new'?choices('trustee.office_same','Registered office',[['yes','Use my home address','We take this from your member details.'],['no','A different address','Enter it below.']],{rerender:true}):''}
@@ -665,7 +696,7 @@ function membersStep(){
     ${i>0?inviteRow(p,m):''}
   </div>`;}).join('');
   return `<div class="col">
-  <div class="stack"><div class="eyebrow">Section 3 of 5</div><h2>Members</h2><p class="lede">One card per person whose super goes into the fund. ${state.fund.structure==='corporate'?'Each member becomes a director of the trustee company.':state.fund.structure==='individual'?'Each member is also a trustee.':''}</p>${OPTNOTE}</div>
+  <div class="stack"><div class="eyebrow"><b>03</b><i></i>Section 3 of 5</div><h2>The <em>members</em></h2><p class="lede">One card per person whose super goes into the fund. ${state.fund.structure==='corporate'?'Each member becomes a director of the trustee company.':state.fund.structure==='individual'?'Each member is also a trustee.':''}</p>${OPTNOTE}</div>
   <div class="note">We'll collect tax file numbers and verify each person's identity inside their secure IdealX account, not on this page.</div>
   ${cards}
   ${n<6?`<button class="btn" data-act="add-member">Add another member</button>`:''}
@@ -676,7 +707,7 @@ function bankingStep(){
   const b=state.banking;
   const people=state.members.map((m,i)=>[String(i),fullName(m)||('Member '+(i+1))]);
   return `<div class="col">
-  <div class="stack"><div class="eyebrow">Section 4 of 5</div><h2>Banking and contact</h2><p class="lede">Where the fund's cash sits, and who we talk to.</p>${OPTNOTE}</div>
+  <div class="stack"><div class="eyebrow"><b>04</b><i></i>Section 4 of 5</div><h2>Banking and <em>contact</em></h2><p class="lede">Where the fund's cash sits, and who we talk to.</p>${OPTNOTE}</div>
   ${choices('banking.cash_account','Fund cash account',[['idealx','IdealX cash account','Opened with the fund. Contributions and rollovers land here and show live in your IdealX view.'],['own','I\'ll open my own','We give you the fund details to open an account at your bank.']])}
   ${select('banking.primary_contact','Primary contact for the fund',people)}
   ${choices('banking.adviser','Is an adviser or accountant helping you?',[['no','No'],['yes','Yes']],{inline:true,rerender:true,hint:'If yes, we loop them in through the IdealX Console with the access you choose.'})}
@@ -692,7 +723,7 @@ function reviewStep(){
   const trusteeRows=f.structure==='individual'?[['Trustee 1',fullName(state.lead)],['Trustee 2',fullName(t.second)],['Relationship',t.second.relationship],['Trustee 2 address',Number(f.member_count)===1?[t.second.addr.street,t.second.addr.suburb,t.second.addr.state,t.second.addr.postcode].filter(Boolean).join(', '):'As member 2']]:[['Company',t.company_name+(t.company_mode==='existing'?' (ACN '+t.acn+')':' (new registration)')],['Registered office',t.company_mode==='new'?(t.office_same==='yes'?'Member 1 home address':[t.office.street,t.office.suburb,t.office.state,t.office.postcode].filter(Boolean).join(', ')):'As registered'],['Directors',state.members.map(fullName).filter(Boolean).join(', ')],['Shareholders',t.company_mode==='new'?(t.shareholders==='other'?(t.shareholders_other||'To be discussed'):'Members in equal shares'):'As registered']];
   const memberBlocks=state.members.map((m,i)=>`<div class="rv"><div class="rh"><b>Member ${i+1}</b><button class="btn sm ghost" data-act="go" data-to="members">Edit</button></div>${kv([['Name',fullName(m)],['Date of birth',m.dob],['Address',[m.addr.street,m.addr.suburb,m.addr.state,m.addr.postcode].filter(Boolean).join(', ')],['Contact',m.email+' · '+m.mobile],['Tax resident',m.resident],['Eligibility',m.disqualified==='yes'?'Needs review (bankruptcy, conviction or disqualification)':m.disqualified==='no'?'No bar declared':'Not answered'],['Employer super',m.employer_contrib],['Rolling in',m.rollover_funds?m.rollover_funds+(m.rollover_member_no?' #'+m.rollover_member_no:'')+(m.rollover_balance?' ('+(BAL.find(x=>x[0]===m.rollover_balance)||[])[1]+')':''):'None listed']].concat(f.structure==='corporate'?[['Director ID',m.director_id],['Place of birth',m.birthplace]]:[]))}</div>`).join('');
   return `<div class="col">
-  <div class="stack"><div class="eyebrow">Section 5 of 5</div><h2>Check and submit</h2><p class="lede">Have a look over everything. You can edit any section. Blank items are fine; a consultant will complete them with you.</p></div>
+  <div class="stack"><div class="eyebrow"><b>05</b><i></i>Section 5 of 5</div><h2>Check and <em>submit</em></h2><p class="lede">Have a look over everything. You can edit any section. Blank items are fine; a consultant will complete them with you.</p></div>
   <div class="rv"><div class="rh"><b>Fund</b><button class="btn sm ghost" data-act="go" data-to="fund">Edit</button></div>${kv([['Name',f.name],['Structure',structure],['Members',f.member_count],['Existing super',f.rollover],['Starting balance',(BAL.find(x=>x[0]===f.balance)||[])[1]],['Timeframe',f.timeline]])}</div>
   <div class="rv"><div class="rh"><b>Trustee</b><button class="btn sm ghost" data-act="go" data-to="trustee">Edit</button></div>${kv(trusteeRows)}</div>
   ${memberBlocks}
@@ -709,7 +740,7 @@ function reviewStep(){
 function verifyScreen(){
   const e=state.ui.errors['ui.otp'];
   return `<div class="col">
-  <div class="stack"><div class="eyebrow">${state.ui.verifyNext==='resume'?'Welcome back':'One quick check'}</div><h2>Enter the code we sent to ${esc(state.lead.mobile)}</h2><p class="lede">${state.ui.verifyNext==='resume'?'Your saved application opens once we know it\'s you.':'This confirms the number is yours before we save anything against it.'}</p></div>
+  <div class="stack"><div class="eyebrow"><b>SMS</b><i></i>${state.ui.verifyNext==='resume'?'Welcome back':'One quick check'}</div><h2>Enter the code we sent to ${esc(state.lead.mobile)}</h2><p class="lede">${state.ui.verifyNext==='resume'?'Your saved application opens once we know it\'s you.':'This confirms the number is yours before we save anything against it.'}</p></div>
   <div class="f ${e?'has-err':''}" data-f="ui.otp"><div class="lr"><label for="f-otp">6-digit code</label>${info('lead.otp')}</div><input id="f-otp" class="otp" data-bind="ui.otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="${esc(state.ui.otp||'')}" ${describedBy('lead.otp')}><div class="err">${esc(e||'')}</div></div>
   <div class="row"><button class="btn sm ghost" data-act="resend-otp">Send it again</button><button class="btn sm ghost" data-act="go" data-to="consent">Change number</button><span class="small muted" id="otpMsg"></span></div>
   <p class="small muted">Prototype: any six digits are accepted here. In production the code comes by SMS and expires after ten minutes.</p>
@@ -724,7 +755,7 @@ function doneScreen(){
   <p class="small muted">Audit trail: ${state.progress.audit.length} field entries recorded as consultant-entered.</p>
   <div class="actions"><button class="btn ghost" data-act="restart">Start another application</button></div></div>`;
   return `<div class="col">
-  <div class="stack"><div class="pill good">Submitted</div><h2>Thanks, ${esc(state.lead.first)}. Your fund application is in.</h2><p class="lede">Reference <span class="done-ref">${esc(state.progress.application_id||'').replace('app_','IX-').toUpperCase()}</span>. We've emailed a copy to ${esc(state.lead.email)}.</p></div>
+  <div class="stack"><div class="pill good">Submitted</div><h2>Thanks, ${esc(state.lead.first)}. Your fund application is <em>in</em>.</h2><p class="lede">Reference <span class="done-ref">${esc(state.progress.application_id||'').replace('app_','IX-').toUpperCase()}</span>. We've emailed a copy to ${esc(state.lead.email)}.</p></div>
   <div class="card stack"><h3>What happens next</h3><ol class="next">
     <li><b>Within one business day</b> a specialist checks the details and calls if anything needs clearing up.</li>
     <li><b>Secure account invite.</b> Each member and trustee gets a link to verify their identity and provide their tax file number.</li>
@@ -780,28 +811,28 @@ function renderOverlay(){
   const ov=$('#overlay'); const v=state.ui.helpView; if(!v){ ov.innerHTML=''; return; }
   let body='';
   if(v==='menu'){
-    body=`<div class="sh"><div><div class="eyebrow">Hand it over at any point</div><h3 style="margin-top:6px">How would you like to finish?</h3><p class="small muted">Everything you've entered is saved under ${esc(state.lead.email)}. Whoever helps you sees it.</p></div><button class="btn sm ghost" data-act="help-close" aria-label="Close">✕</button></div>
+    body=`<div class="sh"><div><div class="eyebrow"><b>Help</b><i></i>Hand it over at any point</div><h3 style="margin-top:6px">How would you like to finish?</h3><p class="small muted">Everything you've entered is saved under ${esc(state.lead.email)}. Whoever helps you sees it.</p></div><button class="btn sm ghost" data-act="help-close" aria-label="Close">✕</button></div>
     <button class="opt" data-act="help-view" data-view="book"><b>Book a call with a specialist</b><span>Pick a 30-minute slot. We finish the application together on the phone.</span></button>
     <button class="opt" data-act="help-view" data-view="callback"><b>Call me when someone's free</b><span>Business hours, usually within the hour.</span></button>
     <button class="opt" data-act="help-view" data-view="link"><b>Email me a link to finish later</b><span>Opens this application where you left it, on any device.</span></button>`;
   } else if(v==='book'){
     const days=businessDays(10); if(!helpDay) helpDay=dkey(days[0]); const cur=days.find(d=>dkey(d)===helpDay)||days[0];
     const sel=state.booking&&state.booking.date===helpDay?state.booking.time:null;
-    body=`<div class="sh"><div><div class="eyebrow">Book a call</div><h3 style="margin-top:6px">Choose a time</h3><p class="small muted">30 minutes, Melbourne time${VISITOR_TZ&&VISITOR_TZ!==MEL?', with your local time shown under each slot':''}. A specialist calls ${esc(state.lead.mobile||'your mobile')}.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
+    body=`<div class="sh"><div><div class="eyebrow"><b>Book</b><i></i>Book a call</div><h3 style="margin-top:6px">Choose a time</h3><p class="small muted">30 minutes, Melbourne time${VISITOR_TZ&&VISITOR_TZ!==MEL?', with your local time shown under each slot':''}. A specialist calls ${esc(state.lead.mobile||'your mobile')}.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
     <div class="days">${days.map(d=>`<button class="day ${dkey(d)===helpDay?'on':''}" data-act="pick-day" data-day="${dkey(d)}"><span>${fmtDay(d)}</span><b>${d.d}</b><span>${MON[d.m-1]}</span></button>`).join('')}</div>
     <div class="small"><b>${fmtDate(cur)}</b></div>
     <div class="slots">${slotsFor(cur).map(s=>`<button class="slot ${sel===s.t?'on':''}" data-act="pick-slot" data-time="${s.t}" data-iso="${s.iso}" data-local="${s.local||''}" ${s.taken?'disabled':''}>${s.t}${s.local?`<small>${s.local} local</small>`:''}</button>`).join('')}</div>
     <button class="btn primary full" data-act="confirm-book" ${sel?'':'disabled'}>${sel?'Confirm '+fmtDay(cur)+' '+cur.d+' at '+sel+' Melbourne time':'Pick a slot to continue'}</button>`;
   } else if(v==='callback'){
-    body=`<div class="sh"><div><div class="eyebrow">Callback</div><h3 style="margin-top:6px">We'll call ${esc(state.lead.mobile)}</h3><p class="small muted">${melOpenNow()?'Usually within the hour during business hours, 9am to 5pm Melbourne time.':'It\'s outside business hours in Melbourne right now. We\'ll call from 9am on the next business day.'} If we miss you, we try again and send an SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
+    body=`<div class="sh"><div><div class="eyebrow"><b>Call</b><i></i>Callback</div><h3 style="margin-top:6px">We'll call ${esc(state.lead.mobile)}</h3><p class="small muted">${melOpenNow()?'Usually within the hour during business hours, 9am to 5pm Melbourne time.':'It\'s outside business hours in Melbourne right now. We\'ll call from 9am on the next business day.'} If we miss you, we try again and send an SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
     ${select('banking.contact_time','Best time',[['now',melOpenNow()?'As soon as someone\'s free':'First thing next business day'],['morning','Morning (9 to 12)'],['midday','Midday (12 to 2)'],['afternoon','Afternoon (2 to 5)']])}
     <button class="btn primary full" data-act="confirm-callback">Request a callback</button>`;
   } else if(v==='fresh'){
-    body=`<div class="sh"><div><div class="eyebrow">Owner controls</div><h3 style="margin-top:6px">Clear everything and start fresh?</h3><p class="small muted">Removes the saved application, the event log, the theme choice and any trust-section copy edits on this device. The published prototype itself is unchanged.</p></div><button class="btn sm ghost" data-act="help-close" aria-label="Close">✕</button></div>
+    body=`<div class="sh"><div><div class="eyebrow"><b>Owner</b><i></i>Owner controls</div><h3 style="margin-top:6px">Clear everything and start fresh?</h3><p class="small muted">Removes the saved application, the event log, the theme choice and any trust-section copy edits on this device. The published prototype itself is unchanged.</p></div><button class="btn sm ghost" data-act="help-close" aria-label="Close">✕</button></div>
     <button class="btn primary full" data-act="fresh-confirm">Clear and start fresh</button>
     <div class="row" style="justify-content:space-between"><button class="btn sm ghost" data-act="help-close">Cancel</button><button class="btn sm ghost" data-act="owner-hide">Hide owner controls</button></div>`;
   } else if(v==='link'){
-    body=`<div class="sh"><div><div class="eyebrow">Finish later</div><h3 style="margin-top:6px">We'll email a link to ${esc(state.lead.email)}</h3><p class="small muted">It opens this application exactly where you left it, after a code to your mobile so nobody else can read it. If you don't come back within a day, a specialist checks in by SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
+    body=`<div class="sh"><div><div class="eyebrow"><b>Link</b><i></i>Finish later</div><h3 style="margin-top:6px">We'll email a link to ${esc(state.lead.email)}</h3><p class="small muted">It opens this application exactly where you left it, after a code to your mobile so nobody else can read it. If you don't come back within a day, a specialist checks in by SMS.</p></div><button class="btn sm ghost" data-act="help-view" data-view="menu" aria-label="Back">←</button></div>
     <button class="btn primary full" data-act="confirm-link">Send the link</button>`;
   }
   ov.innerHTML=`<div class="scrim" data-act="help-close-scrim"><div class="sheet" role="dialog" aria-modal="true">${body}</div></div>`;
